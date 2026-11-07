@@ -1,8 +1,25 @@
-# Orbit Actions
+<p align="center">
+  <img src="assets/brand/app.svg" width="128" height="128" alt="Orbit Actions logo">
+</p>
 
-**English** | [Русский](README.ru.md)
+<h1 align="center">Orbit Actions</h1>
 
-A fast radial menu for Windows, written in Rust.
+<h3 align="center">
+  <a href="https://github.com/kando-menu/kando">Kando</a>, rewritten from scratch as a native Windows app
+</h3>
+
+<p align="center">
+  The same radial menu, themes and <code>menus.json</code> as Kando, without Electron.<br>
+  One small Rust process instead of four Chromium processes: 25 MB of memory instead of 444 MB.
+</p>
+
+<p align="center">
+  <a href="https://github.com/Goldingeng/Orbit-Actions/releases/latest"><b>Download</b></a>
+  &nbsp;·&nbsp;
+  <b>English</b> | <a href="README.ru.md">Русский</a>
+</p>
+
+---
 
 Orbit Actions is a fork of [Kando](https://github.com/kando-menu/kando) by Simon Schneegans. It is not a wrapper but a native rewrite. The interaction model, the five menu themes and the configuration format are the same as in Kando, but instead of Electron it runs as one small Win32 process. It is an independent project and is not affiliated with or endorsed by the Kando project.
 

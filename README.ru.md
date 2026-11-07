@@ -1,8 +1,25 @@
-# Orbit Actions
+<p align="center">
+  <img src="assets/brand/app.svg" width="128" height="128" alt="Логотип Orbit Actions">
+</p>
 
-[English](README.md) | **Русский**
+<h1 align="center">Orbit Actions</h1>
 
-Быстрое круговое меню для Windows, написанное на Rust.
+<h3 align="center">
+  <a href="https://github.com/kando-menu/kando">Kando</a>, переписанный с нуля как нативное приложение для Windows
+</h3>
+
+<p align="center">
+  То же круговое меню, те же темы и тот же <code>menus.json</code>, что у Kando, но без Electron.<br>
+  Один небольшой процесс на Rust вместо четырёх процессов Chromium: 25 МБ памяти вместо 444 МБ.
+</p>
+
+<p align="center">
+  <a href="https://github.com/Goldingeng/Orbit-Actions/releases/latest"><b>Скачать</b></a>
+  &nbsp;·&nbsp;
+  <a href="README.md">English</a> | <b>Русский</b>
+</p>
+
+---
 
 Orbit Actions - форк [Kando](https://github.com/kando-menu/kando) Саймона Шнеганса. Это не обёртка, а переписанная заново нативная программа. Модель взаимодействия, пять тем меню и формат конфигурации остались как в Kando, но вместо Electron теперь один небольшой процесс Win32. Проект независимый, проект Kando его не поддерживает и не одобряет.
 
