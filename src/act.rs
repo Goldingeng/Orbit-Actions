@@ -113,7 +113,7 @@ fn expand(s: &str) -> String {
 }
 
 fn expand_command(s: &str) -> String {
-    fill(s, |value| value.chars().filter(|c| !c.is_control() && !"&|<>^\"%!()`".contains(*c)).collect())
+    fill(s, |value| value.chars().filter(|c| c.is_alphanumeric() || " .,-_:+#@[]/\\".contains(*c)).collect())
 }
 
 pub fn open_path(p: &str) {

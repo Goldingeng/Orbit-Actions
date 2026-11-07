@@ -123,8 +123,9 @@ fn risky_actions(item: &Value) -> Vec<String> {
         "file" => "open-file",
         "hotkey" => "simulate-hotkey",
         "macro" => "execute-macro",
+        "uri" => "open-uri",
         other => other,
-    }), "command": data["command"], "path": data["path"], "hotkey": data["hotkey"] });
+    }), "command": data["command"], "path": data["path"], "hotkey": data["hotkey"], "uri": data["uri"] });
     let workflows = ["selectWorkflow", "hoverWorkflow", "openWorkflow", "activateWorkflow"];
     let actions = workflows.iter().flat_map(|w| item[*w]["actions"].as_array().into_iter().flatten()).chain(std::iter::once(&legacy));
     let mut found: Vec<String> = actions
@@ -134,6 +135,14 @@ fn risky_actions(item: &Value) -> Vec<String> {
                 "open-file" => action["path"].as_str().unwrap_or("").to_string(),
                 "send-websocket-message" => action["url"].as_str().unwrap_or("").to_string(),
                 "simulate-hotkey" => action["hotkey"].as_str().unwrap_or("").to_string(),
+                "open-uri" => {
+                    let uri = action["uri"].as_str().unwrap_or("");
+                    let scheme = uri.split_once(':').map(|(s, _)| s.to_ascii_lowercase()).unwrap_or_default();
+                    if matches!(scheme.as_str(), "http" | "https" | "mailto") {
+                        return None;
+                    }
+                    uri.to_string()
+                }
                 "execute-macro" => "macro".to_string(),
                 _ => return None,
             };

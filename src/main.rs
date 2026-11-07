@@ -17,7 +17,7 @@ mod tr;
 use std::path::PathBuf;
 use std::ptr::{null, null_mut};
 use std::sync::atomic::{AtomicBool, AtomicIsize, Ordering::Relaxed};
-use std::time::Instant;
+use std::time::{Duration, Instant};
 use windows_sys::Win32::Foundation::*;
 use windows_sys::Win32::Graphics::Gdi::*;
 use windows_sys::Win32::Media::{timeBeginPeriod, timeEndPeriod};
@@ -518,6 +518,7 @@ fn listen(hwnd: isize) {
                     }
                 }
                 let _leave = Leave;
+                let _ = stream.set_read_timeout(Some(Duration::from_secs(30)));
                 let from_page = |request: &tungstenite::handshake::server::Request, response| {
                     if request.headers().contains_key("origin") {
                         let mut refusal = tungstenite::handshake::server::ErrorResponse::new(None);
