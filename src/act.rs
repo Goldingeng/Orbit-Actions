@@ -234,19 +234,24 @@ fn is_script(command: &str) -> bool {
 
 pub fn risky(action: &Value) -> Option<String> {
     let s = |k: &str| action[k].as_str().unwrap_or("").to_string();
-    match action["type"].as_str()? {
-        "execute-command" => Some(s("command")),
-        "open-file" => Some(s("path")),
+    let kind = action["type"].as_str()?;
+    let detail = match kind {
+        "execute-command" => s("command"),
+        "open-file" => s("path"),
         "open-uri" => {
             let uri = s("uri");
             let scheme = uri.split_once(':').map(|(s, _)| s.to_ascii_lowercase()).unwrap_or_default();
-            (!matches!(scheme.as_str(), "http" | "https" | "mailto")).then_some(uri)
+            if matches!(scheme.as_str(), "http" | "https" | "mailto") {
+                return None;
+            }
+            uri
         }
-        "send-websocket-message" => Some(format!("{} {}", s("url"), s("message"))),
-        "simulate-hotkey" => Some(s("hotkey")),
-        "execute-macro" => Some(action["macro"].to_string()),
-        _ => None,
-    }
+        "send-websocket-message" => serde_json::json!([s("url"), s("message")]).to_string(),
+        "simulate-hotkey" => s("hotkey"),
+        "execute-macro" => action["macro"].to_string(),
+        _ => return None,
+    };
+    Some(format!("{kind}: {detail}"))
 }
 
 static TRUSTED: Mutex<Option<std::collections::HashSet<String>>> = Mutex::new(None);
@@ -315,7 +320,10 @@ pub fn run(actions: &[Value], ask: Option<&(String, String)>) {
             "close-submenu" => unsafe {
                 SendMessageW(main, PARENT, 0, 0);
             },
-            "delay" => sleep(Duration::from_secs_f64(a["duration"].as_f64().unwrap_or(0.0).max(0.0))),
+            "delay" => {
+                let seconds = a["duration"].as_f64().filter(|d| d.is_finite()).unwrap_or(0.0).clamp(0.0, 3600.0);
+                sleep(Duration::from_secs_f64(seconds));
+            }
             "execute-command" => {
                 let command = expand_command(&s("command"));
                 let flags = if is_script(&command) { 0x00000010 } else { 0x08000000 };
