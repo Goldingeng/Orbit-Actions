@@ -95,7 +95,7 @@ fn blur_reference(pm: &mut Pixmap, radius: f32) {
         Item {
             name: "Пример меню".into(), icon: "apps".into(), theme: "material-symbols-rounded".into(),
             img: None, kind: Kind::Root, angle: None, select: vec![], open: vec![], activate: vec![], hover: vec![],
-            key: None, activate_key: None, children: vec![],
+            key: None, activate_key: None, children: vec![], remote: false,
         }
     }
 
@@ -141,7 +141,7 @@ fn blur_reference(pm: &mut Pixmap, radius: f32) {
         let item = |icon: &str| Item {
             name: "Пример меню".into(), icon: icon.into(), theme: "material-symbols-rounded".into(),
             img: None, kind: Kind::Button, angle: None, select: vec![], open: vec![], activate: vec![], hover: vec![],
-            key: None, activate_key: None, children: vec![],
+            key: None, activate_key: None, children: vec![], remote: false,
         };
         let mut root = item("apps");
         root.kind = Kind::Root;

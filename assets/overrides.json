@@ -1,6 +1,8 @@
 {
   "en": {
     "settings.favorites": "Favorites",
+    "main.ipc-menu-warning-title": "Allow this action?",
+    "main.ipc-menu-warning-message": "This menu was sent to Orbit Actions by another program, and the item you picked wants to run:\n\n{{actions}}\n\nAllow it? Your answer is remembered for this exact action.",
     "settings.import-menu-warning-title": "This menu can run programs",
     "settings.import-menu-warning-message": "The imported menu contains actions that run commands, open files, press keys or send data. Some of them may run as soon as you hover over an item. Import it only if you trust where it came from.\n\n{{actions}}\n\nImport this menu?",
     "settings.about-dialog.message": "Orbit Actions is a fast radial menu for Windows written in Rust. It is a fork of the open-source project Kando by Simon Schneegans and keeps its interaction model, themes and translations.",
@@ -41,6 +43,8 @@
   },
   "ru": {
     "settings.favorites": "Избранное",
+    "main.ipc-menu-warning-title": "Разрешить это действие?",
+    "main.ipc-menu-warning-message": "Это меню прислала в Orbit Actions другая программа, и выбранный пункт хочет выполнить:\n\n{{actions}}\n\nРазрешить? Ответ запомнится для этого действия.",
     "settings.import-menu-warning-title": "Это меню может запускать программы",
     "settings.import-menu-warning-message": "В импортируемом меню есть действия, которые выполняют команды, открывают файлы, нажимают клавиши или отправляют данные. Некоторые из них могут сработать при простом наведении на пункт. Импортируйте его, только если доверяете источнику.\n\n{{actions}}\n\nИмпортировать это меню?",
     "settings.about-dialog.message": "Orbit Actions — быстрое круговое меню для Windows, написанное на Rust. Это форк открытого проекта Kando (автор Simon Schneegans): от него взяты модель управления, темы и переводы.",

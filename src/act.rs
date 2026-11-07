@@ -232,11 +232,73 @@ fn is_script(command: &str) -> bool {
     first.ends_with(".bat") || first.ends_with(".cmd")
 }
 
-pub fn run(actions: &[Value]) {
+pub fn risky(action: &Value) -> Option<String> {
+    let s = |k: &str| action[k].as_str().unwrap_or("").to_string();
+    match action["type"].as_str()? {
+        "execute-command" => Some(s("command")),
+        "open-file" => Some(s("path")),
+        "open-uri" => {
+            let uri = s("uri");
+            let scheme = uri.split_once(':').map(|(s, _)| s.to_ascii_lowercase()).unwrap_or_default();
+            (!matches!(scheme.as_str(), "http" | "https" | "mailto")).then_some(uri)
+        }
+        "send-websocket-message" => Some(format!("{} {}", s("url"), s("message"))),
+        "simulate-hotkey" => Some(s("hotkey")),
+        "execute-macro" => Some(action["macro"].to_string()),
+        _ => None,
+    }
+}
+
+static TRUSTED: Mutex<Option<std::collections::HashSet<String>>> = Mutex::new(None);
+
+fn trusted_path() -> std::path::PathBuf {
+    crate::menu::dir().join("trusted-actions.json")
+}
+
+fn allowed(main: HWND, detail: &str, ask: &(String, String)) -> bool {
+    let mut guard = TRUSTED.lock().unwrap();
+    let trusted = guard.get_or_insert_with(|| {
+        let text = std::fs::read_to_string(trusted_path()).unwrap_or_default();
+        serde_json::from_str::<Vec<String>>(text.trim_start_matches('\u{feff}')).unwrap_or_default().into_iter().collect()
+    });
+    if trusted.contains(detail) {
+        return true;
+    }
+    unsafe {
+        SendMessageW(main, HIDE, 0, 0);
+        for _ in 0..100 {
+            if IsWindowVisible(main) == 0 {
+                break;
+            }
+            sleep(Duration::from_millis(5));
+        }
+        let shown: String = detail.chars().take(600).collect();
+        let text = w(&ask.1.replace("{{actions}}", &shown));
+        let title = w(&ask.0);
+        let flags = MB_YESNO | MB_ICONWARNING | MB_DEFBUTTON2 | MB_TOPMOST | MB_SETFOREGROUND;
+        if MessageBoxW(null_mut(), text.as_ptr(), title.as_ptr(), flags) != IDYES {
+            return false;
+        }
+    }
+    trusted.insert(detail.to_string());
+    let mut list: Vec<&String> = trusted.iter().collect();
+    list.sort();
+    if let Ok(text) = serde_json::to_string_pretty(&list) {
+        let _ = std::fs::write(trusted_path(), text);
+    }
+    true
+}
+
+pub fn run(actions: &[Value], ask: Option<&(String, String)>) {
     let main = MAIN.load(std::sync::atomic::Ordering::Relaxed) as HWND;
     let mut inhibited = false;
 
     for a in actions {
+        if let (Some(ask), Some(detail)) = (ask, risky(a)) {
+            if !allowed(main, &detail, ask) {
+                break;
+            }
+        }
         let s = |k: &str| a[k].as_str().unwrap_or("").to_string();
         match a["type"].as_str().unwrap_or("") {
             "close-menu" => unsafe {

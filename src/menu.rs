@@ -26,6 +26,7 @@ pub struct Item {
     pub key: Option<String>,
     pub activate_key: Option<String>,
     pub children: Vec<Item>,
+    pub remote: bool,
 }
 
 pub struct Menu {
@@ -156,6 +157,14 @@ fn item(v: &Value, root: bool) -> Item {
         hover,
         key: if kind == Kind::Button { select_key } else { open_key },
         children,
+        remote: false,
+    }
+}
+
+fn mark_remote(item: &mut Item) {
+    item.remote = true;
+    for child in &mut item.children {
+        mark_remote(child);
     }
 }
 
@@ -188,8 +197,10 @@ fn read(p: &PathBuf) -> Value {
 }
 
 pub fn custom(root: &Value) -> Menu {
+    let mut root = item(root, true);
+    mark_remote(&mut root);
     Menu {
-        root: item(root, true),
+        root,
         shortcut: String::new(),
         fixed: None,
         anchored: false,

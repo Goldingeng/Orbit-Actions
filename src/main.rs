@@ -883,13 +883,13 @@ unsafe fn finish_hide(app: &mut App) {
     timeEndPeriod(1);
 }
 
-fn workflow(pie: &Pie, path: &[usize], pick: fn(&menu::Item) -> &Vec<Value>) -> Option<(Vec<Value>, Kind)> {
+fn workflow(pie: &Pie, path: &[usize], pick: fn(&menu::Item) -> &Vec<Value>) -> Option<(Vec<Value>, Kind, bool)> {
     let node = pie.nodes.iter().find(|n| n.path == path)?;
     let actions = pick(&node.item);
     if actions.is_empty() {
         return None;
     }
-    Some((actions.clone(), node.item.kind))
+    Some((actions.clone(), node.item.kind, node.item.remote))
 }
 
 fn is_noop(actions: &[Value]) -> bool {
@@ -937,7 +937,7 @@ unsafe fn handle_events(app: &mut App) {
                 Event::Activate(path) => workflow(pie, path, |i| &i.activate),
                 Event::Hover(path) => workflow(pie, path, |i| &i.hover),
             };
-            if let Some((actions, _)) = job {
+            if let Some((actions, _, remote)) = job {
                 if !is_noop(&actions) {
                     app.noop = false;
                 }
@@ -952,7 +952,8 @@ unsafe fn handle_events(app: &mut App) {
                         }
                     }
                 }
-                std::thread::spawn(move || act::run(&actions));
+                let ask = remote.then(|| (app.tr.t("main.ipc-menu-warning-title"), app.tr.t("main.ipc-menu-warning-message")));
+                std::thread::spawn(move || act::run(&actions, ask.as_ref()));
             }
         }
     }
@@ -1099,6 +1100,7 @@ unsafe fn draw_button(app: &mut App) {
         key: None,
         activate_key: None,
         children: vec![],
+        remote: false,
     };
     draw::draw_icon(&mut pm, &gear, v(s / 2.0, s / 2.0), s * 0.62, [1.0, 1.0, 1.0, 1.0], 1.0, false);
     let alpha = if app.settings.hide_button && !app.button_hover { 0.0 } else { 1.0 };
