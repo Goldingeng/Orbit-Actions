@@ -10,7 +10,7 @@
 
 <p align="center">
   The same radial menu, themes and <code>menus.json</code> as Kando, without Electron.<br>
-  One small Rust process instead of four Chromium processes: 25 MB of memory instead of 444 MB.
+  One small Rust process instead of four Chromium processes: 25 MB of memory instead of 446 MB.
 </p>
 
 <p align="center">
@@ -62,22 +62,22 @@ Both programs were measured on the same PC, with the same `menus.json` and `conf
 
 - PC: AMD Ryzen 7 7700, 64 GB RAM, Windows 11 Home 26200
 - Kando 3.0.1, the official `Kando-win32-x64-3.0.1.zip`
-- Orbit Actions 0.1.0, x64 release build
+- Orbit Actions 0.1.5, x64 release build
 - Date: November 7, 2026
 
 | Metric | Orbit Actions | Kando 3.0.1 | Difference |
 |---|---|---|---|
-| Memory at idle (working set) | 25.3 MB | 444 MB | 18x less |
-| Private memory at idle | 6.3 MB | 294 MB | 47x less |
-| Memory with the menu open | 27.3 MB | 445 MB | 16x less |
-| Memory after opening the menu 20 times | 27.8 MB | 462 MB | 17x less |
-| Memory with settings open | 129 MB | 659 MB | 5.1x less |
-| Startup until ready | 36 ms | 2,297 ms | 64x faster |
-| Opening the menu from a command | 31 ms | 94 ms | 3x faster |
-| Size on disk | 15.5 MB (2 files) | 406 MB (255 files) | 26x smaller |
+| Memory at idle (working set) | 25.2 MB | 446 MB | 18x less |
+| Private memory at idle | 6.3 MB | 295 MB | 47x less |
+| Memory with the menu open | 27.2 MB | 443 MB | 16x less |
+| Memory after opening the menu 20 times | 27.6 MB | 460 MB | 17x less |
+| Memory with settings open | 137 MB | 653 MB | 4.8x less |
+| Startup until ready | 38 ms | 2,413 ms | 64x faster |
+| Opening the menu from a command | 33 ms | 109 ms | 3.3x faster |
+| Size on disk | 15.6 MB (2 files) | 406 MB (255 files) | 26x smaller |
 | Processes | 1 | 4 | 4x fewer |
 | Threads at idle | 12 | 169 | 14x fewer |
-| Handles at idle | 422 | 2,535 | 6x fewer |
+| Handles at idle | 419 | 2,533 | 6x fewer |
 | CPU usage at idle (over 60 s) | 0 % | 0.013 % | Orbit Actions uses no CPU at all |
 
 ![Memory at idle](docs/memory-idle.svg)
@@ -98,7 +98,7 @@ Everything is done by [`tools/bench.ps1`](tools/bench.ps1). The raw results are 
 
 - **Memory, threads, handles** - the sum over all processes of the program. For Kando that is the main Electron process plus the GPU, network and renderer processes. Working set is the physical memory in use right now, including shared system libraries. Private is the memory that belongs only to this program.
 - **Idle** - 20 seconds after start. CPU is the processor time used over the next 60 seconds.
-- **Startup** - from launching the exe until the program has opened its IPC port and accepts connections. Both programs write this port to `%APPDATA%\kando\ipc-info.json`. The median of 5 runs. Kando's first cold start took 12.3 s and is not part of the median.
+- **Startup** - from launching the exe until the program has opened its IPC port and accepts connections. Both programs write this port to `%APPDATA%\kando\ipc-info.json`. The median of 5 runs. Kando's first cold start took 21.3 s and is not part of the median.
 - **Opening the menu** - from calling `exe --menu "<name>"` until the menu window is visible, the median of 5 runs. This includes starting a second instance that passes the command to the running one. A hotkey skips that step, so both programs open faster that way.
 - **Settings** - memory 8 seconds after `--settings`. In Orbit Actions this is a separate `orbit-actions-settings.exe`. Most of its memory is the graphics card's OpenGL driver. The process only lives while the settings window is open.
 - **Size on disk** - for Orbit Actions the two exe files, for Kando the unpacked folder from the zip.
@@ -125,11 +125,21 @@ Input comes from global mouse and keyboard hooks (`WH_MOUSE_LL`, `WH_KEYBOARD_LL
 
 The settings window is built with [egui](https://github.com/emilk/egui) on OpenGL, with a Windows 11 Mica backdrop.
 
+## Security
+
+A radial menu that can run commands needs clear trust boundaries. Your own `menus.json` is trusted: whatever it says is what runs, like any automation script. Everything that comes from elsewhere is checked.
+
+- **Imported menus.** Before a menu file is imported in the settings window, Orbit Actions lists every action in it that runs a command, opens a file, opens a link that is not `http`, `https` or `mailto`, sends a WebSocket message, presses keys or plays a macro, including actions that run on hover, and asks whether to import it.
+- **Menus sent by other programs.** Scripts can show their own menus through the local WebSocket API (`show-custom-menu`). Items of such a menu are marked as remote. Before a remote item runs one of the actions above, Orbit Actions hides the menu and asks. The answer is remembered for that exact action in `trusted-actions.json` next to the program.
+- **Local WebSocket API.** It listens on `127.0.0.1` only, on a random port. Connections from web pages are refused, since browsers always send an `Origin` header and local scripts do not. At most 16 clients and 1 MB per message are accepted, and a client that stays silent for 30 seconds is disconnected.
+- **Command templates.** When `{{app_name}}` or `{{window_name}}` is used in a command, only letters, digits, spaces and `. , - _ : + # @ [ ] / \` are kept from the substituted text, so a window or tab title cannot inject its own command into `cmd`, PowerShell or any other shell.
+- **No data leaves your PC** except the optional update check against `api.github.com`. There is no telemetry, keys are never logged, and updates are never downloaded or run automatically.
+
 ## What makes it fast and small, and why
 
 | Technique | Why |
 |---|---|
-| Native Win32 instead of Electron | Electron starts a whole Chromium: several processes, hundreds of megabytes and seconds to start. That is where Kando's 444 MB at idle comes from. |
+| Native Win32 instead of Electron | Electron starts a whole Chromium: several processes, hundreds of megabytes and seconds to start. That is where Kando's 446 MB at idle comes from. |
 | Software rendering with tiny-skia + `UpdateLayeredWindow` | A transparent round menu needs neither a GPU context nor a browser compositor. A menu frame is a few hundred kilobytes of pixels; the CPU draws it before a graphics card would even wake up. |
 | Settings in a separate process | The settings UI needs OpenGL and egui, about 120 MB. Inside the menu process that memory would be taken all the time. A separate exe gives it back to the system as soon as the window closes. |
 | Frame timer only while animating | The 8 ms timer runs only while something moves, and stops when the menu is still or closed. So no CPU is used at idle. |
@@ -137,7 +147,7 @@ The settings window is built with [egui](https://github.com/emilk/egui) on OpenG
 | Gamepad polling only while the menu is open | XInput is polled every 16 ms, only while the menu is on screen. |
 | Fonts warmed up in the background at start | The Material Symbols and Simple Icons fonts are parsed on a separate thread, so the first menu doesn't wait for them. |
 | Icons as font glyphs, not thousands of SVG files | Thousands of Material and Simple Icons are stored as two TTF fonts with a name → glyph table and drawn at exactly the needed size. |
-| Size-limited caches | The icon mask cache is cleared after 4 MB or 256 entries, so memory doesn't grow over time. After opening the menu 20 times it grew by only 0.5 MB. |
+| Size-limited caches | The icon mask cache is cleared after 4 MB or 256 entries, so memory doesn't grow over time. After opening the menu 20 times it grew by only 0.4 MB. |
 | One frame buffer for the whole lifetime | The window's DIB buffer is created once and only grows when needed instead of being allocated every frame. |
 | Sounds via `PlaySoundW` from memory | Short WAV files are played by a system call, without an audio engine. |
 | All resources inside the exe | Translations, themes, icons, sounds and fonts are embedded with `include_bytes!`. No hundreds of small files and no disk reads at startup. |
