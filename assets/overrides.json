@@ -1,6 +1,8 @@
 {
   "en": {
     "settings.favorites": "Favorites",
+    "settings.save-error-title": "Could not save settings",
+    "settings.save-error-message": "Orbit Actions could not write {{file}}.\n\n{{error}}\n\nThe previous version of the file is still in place. Check that the disk is not full and that the folder is writable.",
     "main.ipc-menu-warning-title": "Allow this action?",
     "main.ipc-menu-warning-message": "This menu was sent to Orbit Actions by another program, and the item you picked wants to run:\n\n{{actions}}\n\nAllow it? Your answer is remembered for this exact action.",
     "settings.import-menu-warning-title": "This menu can run programs",
@@ -43,6 +45,8 @@
   },
   "ru": {
     "settings.favorites": "Избранное",
+    "settings.save-error-title": "Не удалось сохранить настройки",
+    "settings.save-error-message": "Orbit Actions не смог записать {{file}}.\n\n{{error}}\n\nПредыдущая версия файла осталась на месте. Проверьте, что диск не заполнен и в папку можно писать.",
     "main.ipc-menu-warning-title": "Разрешить это действие?",
     "main.ipc-menu-warning-message": "Это меню прислала в Orbit Actions другая программа, и выбранный пункт хочет выполнить:\n\n{{actions}}\n\nРазрешить? Ответ запомнится для этого действия.",
     "settings.import-menu-warning-title": "Это меню может запускать программы",

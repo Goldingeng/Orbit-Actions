@@ -238,7 +238,7 @@ impl Pie {
             };
             let key = item.key.clone().unwrap_or_else(|| (index + 1).to_string());
 
-            let mut children = item.children.clone();
+            let mut children = if item.kind == Kind::Button { vec![] } else { item.children.clone() };
             let mut angles = vec![];
             let mut parent_wedge = None;
             let mut wedges = vec![];

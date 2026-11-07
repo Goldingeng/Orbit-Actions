@@ -1,6 +1,6 @@
 [package]
 name = "orbit-actions"
-version = "0.1.8"
+version = "0.1.9"
 edition = "2021"
 description = "Fast radial menu for Windows, a Rust fork of Kando"
 license = "MIT"
@@ -29,6 +29,7 @@ raw-window-handle = "0.6"
 image-webp = "0.2"
 base64 = "0.22"
 tungstenite = { version = "0.24", features = ["native-tls"] }
+regex-lite = "0.1"
 
 [dependencies.windows]
 version = "0.58"

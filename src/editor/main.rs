@@ -155,10 +155,15 @@ fn risky_actions(item: &Value) -> Vec<String> {
     found
 }
 
-fn write_json(path: &PathBuf, value: &Value) {
-    if let Ok(text) = serde_json::to_string_pretty(value) {
-        let _ = std::fs::write(path, text);
-    }
+fn write_json(path: &PathBuf, value: &Value) -> std::io::Result<()> {
+    let text = serde_json::to_string_pretty(value).map_err(std::io::Error::other)?;
+    let mut temp = path.clone().into_os_string();
+    temp.push(".tmp");
+    let temp = PathBuf::from(temp);
+    std::fs::write(&temp, text)?;
+    std::fs::rename(&temp, path).inspect_err(|_| {
+        let _ = std::fs::remove_file(&temp);
+    })
 }
 
 pub fn notify_daemon() {
@@ -378,14 +383,27 @@ impl Editor {
         }
     }
 
+    fn save_failed(&self, path: &PathBuf, error: std::io::Error) {
+        let message = self.t("settings.save-error-message").replace("{{file}}", &path.display().to_string()).replace("{{error}}", &error.to_string());
+        rfd::MessageDialog::new()
+            .set_level(rfd::MessageLevel::Error)
+            .set_title(self.t("settings.save-error-title"))
+            .set_description(message)
+            .show();
+    }
+
     fn save_menus(&mut self) {
-        write_json(&self.menus_path, &self.doc);
+        if let Err(error) = write_json(&self.menus_path, &self.doc) {
+            self.save_failed(&self.menus_path, error);
+        }
         notify_daemon();
     }
 
     fn checkpoint(&mut self, ctx: &egui::Context) {
         if self.config != self.saved_config {
-            write_json(&self.config_path, &self.config);
+            if let Err(error) = write_json(&self.config_path, &self.config) {
+                self.save_failed(&self.config_path, error);
+            }
             self.saved_config = self.config.clone();
             notify_daemon();
         }
@@ -730,7 +748,9 @@ impl Editor {
         let menu = self.menus()[i].clone();
         let name = menu["root"]["name"].as_str().unwrap_or("menu").to_string();
         if let Some(file) = rfd::FileDialog::new().add_filter("JSON", &["json"]).set_file_name(format!("{name}.json")).save_file() {
-            write_json(&file, &menu);
+            if let Err(error) = write_json(&file, &menu) {
+                self.save_failed(&file, error);
+            }
         }
     }
 

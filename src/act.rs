@@ -174,12 +174,20 @@ pub fn title(h: HWND) -> String {
     String::from_utf16_lossy(&buf[..n.max(0) as usize])
 }
 
-fn matches(cond: &str, value: &str) -> bool {
-    if cond.is_empty() {
+pub fn matches(rule: &str, value: &str) -> bool {
+    if rule.is_empty() {
         return true;
     }
-    let c = cond.trim_matches('/').to_lowercase();
-    value.to_lowercase().contains(&c)
+    let lower = value.to_lowercase();
+    if let Some((body, flags)) = rule.strip_prefix('/').and_then(|r| r.rsplit_once('/')) {
+        let inline: String = flags.chars().filter(|c| matches!(c, 'i' | 'm' | 's')).collect();
+        let pattern = if inline.is_empty() { body.to_string() } else { format!("(?{inline}){body}") };
+        return match regex_lite::Regex::new(&pattern) {
+            Ok(regex) => regex.is_match(value),
+            Err(_) => lower.contains(&body.to_lowercase()),
+        };
+    }
+    rule.to_lowercase().split('|').any(|part| lower.contains(part))
 }
 
 static FOCUS: Mutex<(String, String, isize)> = Mutex::new((String::new(), String::new(), 0));
@@ -391,5 +399,23 @@ pub fn run(actions: &[Value], ask: Option<&(String, String)>) {
     }
     if inhibited {
         unsafe { SendMessageW(main, INHIBIT, 0, 0) };
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::matches;
+
+    #[test]
+    fn conditions() {
+        assert!(matches("", "anything"));
+        assert!(matches("code", "Visual Studio Code"));
+        assert!(matches("chrome|firefox", "Mozilla Firefox"));
+        assert!(matches("/^Code$/i", "code"));
+        assert!(!matches("/^Code$/i", "Visual Studio Code"));
+        assert!(matches("/^Code$/", "Code"));
+        assert!(!matches("/^Code$/", "code"));
+        assert!(matches(r"/notepad\.exe$/i", r"C:\Windows\NOTEPAD.EXE"));
+        assert!(matches("/[a-z/", "x [a-z y"));
     }
 }

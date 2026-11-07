@@ -40,6 +40,7 @@ use tr::Tr;
 pub static MAIN: AtomicIsize = AtomicIsize::new(0);
 pub const OWN_INPUT: usize = 0x4F524254;
 static SHOWN: AtomicBool = AtomicBool::new(false);
+static PRECISE_TIMER: AtomicBool = AtomicBool::new(false);
 static ALT_HELD: AtomicBool = AtomicBool::new(false);
 static ALT_CLICK: AtomicBool = AtomicBool::new(true);
 
@@ -279,8 +280,18 @@ fn main() {
         register_protocol();
         hotkeys(&*app);
         tray(&*app, NIM_ADD);
-        SetWindowsHookExW(WH_MOUSE_LL, Some(mouse_hook), instance, 0);
-        SetWindowsHookExW(WH_KEYBOARD_LL, Some(keyboard_hook), instance, 0);
+        let instance_handle = instance as isize;
+        std::thread::spawn(move || {
+            use windows_sys::Win32::System::Threading::{GetCurrentThread, SetThreadPriority, THREAD_PRIORITY_HIGHEST};
+            let instance = instance_handle as HINSTANCE;
+            SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_HIGHEST);
+            SetWindowsHookExW(WH_MOUSE_LL, Some(mouse_hook), instance, 0);
+            SetWindowsHookExW(WH_KEYBOARD_LL, Some(keyboard_hook), instance, 0);
+            let mut msg = std::mem::zeroed();
+            while GetMessageW(&mut msg, null_mut(), 0, 0) > 0 {
+                DispatchMessageW(&msg);
+            }
+        });
         std::thread::spawn(draw::warm);
         if (*app).settings.version_check {
             check_version(hwnd as isize);
@@ -319,16 +330,7 @@ unsafe fn hotkeys(app: &App) {
 }
 
 fn text_matches(rule: &Value, value: &str) -> bool {
-    let rule = rule.as_str().unwrap_or("");
-    if rule.is_empty() {
-        return true;
-    }
-    let pattern = match rule.strip_prefix('/').and_then(|r| r.rsplit_once('/')) {
-        Some((body, _)) => body,
-        None => rule,
-    };
-    let value = value.to_lowercase();
-    pattern.to_lowercase().split('|').any(|part| value.contains(part))
+    act::matches(rule.as_str().unwrap_or(""), value)
 }
 
 fn conditions_met(menu: &Menu, app_name: &str, window: &str, p: POINT) -> bool {
@@ -383,6 +385,12 @@ unsafe fn hotkey(app: &mut App, id: usize) {
         return;
     }
 
+    if let Some(i) = choose(app, &group) {
+        open(app, i);
+    }
+}
+
+unsafe fn choose(app: &App, group: &[usize]) -> Option<usize> {
     let p = cursor();
     let fg = GetForegroundWindow();
     let mut pid = 0;
@@ -390,14 +398,10 @@ unsafe fn hotkey(app: &mut App, id: usize) {
     let app_name = act::exe_name(pid);
     let window = act::title(fg);
     let matching: Vec<usize> = group.iter().copied().filter(|&i| conditions_met(&app.menus[i], &app_name, &window, p)).collect();
-    let choice = if app.settings.same_shortcut == "cycle-from-recent" && matching.contains(&app.current) {
-        Some(app.current)
-    } else {
-        matching.iter().copied().find(|&i| has_rules(&app.menus[i])).or(matching.first().copied())
-    };
-    if let Some(i) = choice {
-        open(app, i);
+    if app.settings.same_shortcut == "cycle-from-recent" && matching.contains(&app.current) {
+        return Some(app.current);
     }
+    matching.iter().copied().find(|&i| has_rules(&app.menus[i])).or(matching.first().copied())
 }
 
 unsafe fn star_icon(color: &str, size: i32) -> Option<HICON> {
@@ -823,7 +827,8 @@ unsafe fn to_local(app: &App, x: i32, y: i32) -> V {
 }
 
 unsafe fn open_named(app: &mut App, name: &str) {
-    let found = app.menus.iter().position(|m| m.shortcut == name || m.root.name == name);
+    let group: Vec<usize> = (0..app.menus.len()).filter(|&i| app.menus[i].shortcut == name || app.menus[i].root.name == name).collect();
+    let found = if group.len() > 1 { choose(app, &group).or(group.first().copied()) } else { group.first().copied() };
     if let Some(i) = found {
         open(app, i);
     }
@@ -878,7 +883,9 @@ unsafe fn open(app: &mut App, index: usize) {
     pie.max_radius = app.settings.theme.max_radius;
     app.pie = Some(pie);
     SHOWN.store(true, Relaxed);
-    timeBeginPeriod(1);
+    if !PRECISE_TIMER.swap(true, Relaxed) {
+        timeBeginPeriod(1);
+    }
     handle_events(app);
     frame(app);
     ShowWindow(app.hwnd, SW_SHOWNOACTIVATE);
@@ -897,7 +904,9 @@ unsafe fn finish_hide(app: &mut App) {
     KillTimer(app.hwnd, PAD_TIMER);
     app.ticking = false;
     app.pie = None;
-    timeEndPeriod(1);
+    if PRECISE_TIMER.swap(false, Relaxed) {
+        timeEndPeriod(1);
+    }
 }
 
 fn workflow(pie: &Pie, path: &[usize], pick: fn(&menu::Item) -> &Vec<Value>) -> Option<(Vec<Value>, Kind, bool)> {

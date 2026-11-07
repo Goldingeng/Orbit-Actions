@@ -48,7 +48,11 @@ pub fn image(theme: &str, icon: &str) -> Option<Arc<Pixmap>> {
         return hit.clone();
     }
     let value = load(theme, icon).map(Arc::new);
-    cache.lock().unwrap().insert(key, value.clone());
+    let mut cache = cache.lock().unwrap();
+    if cache.len() >= 256 {
+        cache.clear();
+    }
+    cache.insert(key, value.clone());
     value
 }
 

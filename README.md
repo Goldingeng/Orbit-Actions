@@ -173,7 +173,7 @@ Menu (`orbit-actions.exe`):
 - Sound themes with volume and pitch
 - Icons: Material Symbols Rounded, Simple Icons (plain and colored), built-in action icons, emoji, base64 images, installed applications and user icon folders
 - Actions on select, open, hover and activate: close menu, close submenu, delay, execute command, execute macro, focus window, inhibit shortcuts, open file, open menu, open settings, open URI, send WebSocket message, set clipboard, simulate hotkey
-- Menu conditions by application, window title and screen area
+- Menu conditions by application, window title and screen area. Application and title rules are plain text (several variants separated by `|`) or regular expressions in Kando style, such as `/^Code$/i`
 - On-screen settings button, tray menu, `orbit-actions://` links, update check
 - Optional Alt + left click trigger
 - Commands that run `.bat` and `.cmd` files open in their own console. Other commands run without a window.
