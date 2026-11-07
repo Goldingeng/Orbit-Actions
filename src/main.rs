@@ -485,6 +485,15 @@ fn version_numbers(v: &str) -> Vec<u32> {
     v.trim().trim_start_matches(['v', 'V']).split(['.', '-']).map_while(|p| p.parse().ok()).collect()
 }
 
+fn post_text(hwnd: isize, msg: u32, text: String) {
+    let text = Box::into_raw(Box::new(text));
+    unsafe {
+        if PostMessageW(hwnd as HWND, msg, 0, text as LPARAM) == 0 {
+            drop(Box::from_raw(text));
+        }
+    }
+}
+
 fn listen(hwnd: isize) {
     let Ok(listener) = std::net::TcpListener::bind("127.0.0.1:0") else { return };
     let Ok(port) = listener.local_addr().map(|a| a.port()) else { return };
@@ -496,11 +505,18 @@ fn listen(hwnd: isize) {
     std::thread::spawn(move || {
         for stream in listener.incoming().flatten() {
             std::thread::spawn(move || {
-                let Ok(mut socket) = tungstenite::accept(stream) else { return };
+                let from_page = |request: &tungstenite::handshake::server::Request, response| {
+                    if request.headers().contains_key("origin") {
+                        let mut refusal = tungstenite::handshake::server::ErrorResponse::new(None);
+                        *refusal.status_mut() = tungstenite::http::StatusCode::FORBIDDEN;
+                        return Err(refusal);
+                    }
+                    Ok(response)
+                };
+                let Ok(mut socket) = tungstenite::accept_hdr(stream, from_page) else { return };
                 while let Ok(message) = socket.read() {
                     if let tungstenite::Message::Text(text) = message {
-                        let text = Box::new(text.to_string());
-                        unsafe { PostMessageW(hwnd as HWND, REMOTE, 0, Box::into_raw(text) as LPARAM) };
+                        post_text(hwnd, REMOTE, text.to_string());
                     }
                 }
             });
@@ -570,7 +586,7 @@ fn check_version(hwnd: isize) {
         let Some(tag) = release["tag_name"].as_str() else { return };
         if version_numbers(tag) > version_numbers(env!("CARGO_PKG_VERSION")) {
             let url = release["html_url"].as_str().unwrap_or("https://github.com/Goldingeng/Orbit-Actions/releases/latest").to_string();
-            unsafe { PostMessageW(hwnd as HWND, UPDATE, 0, Box::into_raw(Box::new(url)) as LPARAM) };
+            post_text(hwnd, UPDATE, url);
         }
     });
 }
