@@ -14,14 +14,25 @@ pub struct Tr {
 
 const OVERRIDES: &str = include_str!("../assets/overrides.json");
 
-fn system_language() -> String {
-    use windows_sys::Win32::Globalization::GetUserDefaultLocaleName;
-    let mut buf = [0u16; 85];
-    let n = unsafe { GetUserDefaultLocaleName(buf.as_mut_ptr(), buf.len() as i32) };
-    if n <= 1 {
-        return "en".into();
+fn system_languages() -> Vec<String> {
+    use windows_sys::Win32::Globalization::{GetUserDefaultLocaleName, GetUserPreferredUILanguages, MUI_LANGUAGE_NAME};
+    let mut languages = vec![];
+    let mut count = 0u32;
+    let mut size = 0u32;
+    unsafe {
+        if GetUserPreferredUILanguages(MUI_LANGUAGE_NAME, &mut count, std::ptr::null_mut(), &mut size) != 0 && size > 0 {
+            let mut buf = vec![0u16; size as usize];
+            if GetUserPreferredUILanguages(MUI_LANGUAGE_NAME, &mut count, buf.as_mut_ptr(), &mut size) != 0 {
+                languages.extend(buf.split(|&c| c == 0).filter(|s| !s.is_empty()).map(String::from_utf16_lossy));
+            }
+        }
+        let mut buf = [0u16; 85];
+        let n = GetUserDefaultLocaleName(buf.as_mut_ptr(), buf.len() as i32);
+        if n > 1 {
+            languages.push(String::from_utf16_lossy(&buf[..n as usize - 1]));
+        }
     }
-    String::from_utf16_lossy(&buf[..n as usize - 1])
+    languages
 }
 
 fn pick(lang: &str) -> Option<&'static (&'static str, &'static str)> {
@@ -40,8 +51,11 @@ fn pick(lang: &str) -> Option<&'static (&'static str, &'static str)> {
 impl Tr {
     pub fn new(locale: &str) -> Tr {
         let en: Value = pick("en").and_then(|(_, t)| serde_json::from_str(t).ok()).unwrap_or_default();
-        let lang = if locale.is_empty() || locale == "auto" { system_language() } else { locale.to_string() };
-        let found = pick(&lang);
+        let found = if locale.is_empty() || locale == "auto" {
+            system_languages().iter().find_map(|lang| pick(lang)).or_else(|| pick("en"))
+        } else {
+            pick(locale)
+        };
         let main = found.and_then(|(_, t)| serde_json::from_str(t).ok()).unwrap_or_else(|| en.clone());
         let all: Value = serde_json::from_str(OVERRIDES).unwrap_or_default();
         let code = found.map(|(code, _)| code.to_lowercase()).unwrap_or_else(|| "en".into());
