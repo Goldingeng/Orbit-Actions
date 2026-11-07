@@ -1,6 +1,6 @@
 ﻿#define AppName "Orbit Actions"
 #ifndef AppVersion
-  #define AppVersion "0.1.5"
+  #define AppVersion "0.1.6"
 #endif
 #ifndef Target
   #define Target "..\target"
