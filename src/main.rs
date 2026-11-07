@@ -400,15 +400,18 @@ unsafe fn hotkey(app: &mut App, id: usize) {
     }
 }
 
-unsafe fn star_icon(color: &str, size: i32) -> HICON {
+unsafe fn star_icon(color: &str, size: i32) -> Option<HICON> {
     let source = include_str!("../assets/brand/star-tray.svg").replace("#fff", color);
-    let Some(pm) = draw::svg(&source, size as f32, None) else { return LoadIconW(null_mut(), IDI_APPLICATION) };
+    let pm = draw::svg(&source, size as f32, None)?;
+    let (width, height) = (pm.width() as i32, pm.height() as i32);
     let mut bgra = pm.data().to_vec();
     for px in bgra.chunks_exact_mut(4) {
         px.swap(0, 2);
     }
-    let mask = vec![0u8; (size * size / 8) as usize];
-    CreateIcon(GetModuleHandleW(null()), size, size, 1, 32, mask.as_ptr(), bgra.as_ptr())
+    let row = ((width + 15) / 16 * 2) as usize;
+    let mask = vec![0u8; row * height as usize];
+    let icon = CreateIcon(GetModuleHandleW(null()), width, height, 1, 32, mask.as_ptr(), bgra.as_ptr());
+    (!icon.is_null()).then_some(icon)
 }
 
 unsafe fn tray_data(app: &App) -> NOTIFYICONDATAW {
@@ -429,11 +432,15 @@ unsafe fn tray(app: &App, op: NOTIFY_ICON_MESSAGE) {
     nid.uCallbackMessage = TRAY;
     let size = GetSystemMetricsForDpi(SM_CXSMICON, GetDpiForWindow(app.hwnd)).max(16);
     let color = if flavor == "black" { "#000" } else { "#fff" };
-    nid.hIcon = star_icon(color, size);
+    let own = star_icon(color, size);
+    nid.hIcon = own.unwrap_or_else(|| LoadIconW(null_mut(), IDI_APPLICATION));
     for (i, c) in "Orbit Actions".encode_utf16().enumerate() {
         nid.szTip[i] = c;
     }
     Shell_NotifyIconW(op, &nid);
+    if let Some(icon) = own {
+        DestroyIcon(icon);
+    }
 }
 
 unsafe fn balloon(app: &App, title: &str, text: &str) {
@@ -486,13 +493,18 @@ fn version_numbers(v: &str) -> Vec<u32> {
     v.trim().trim_start_matches(['v', 'V']).split(['.', '-']).map_while(|p| p.parse().ok()).collect()
 }
 
+static INBOX: std::sync::Mutex<Vec<(u32, String)>> = std::sync::Mutex::new(Vec::new());
+
 fn post_text(hwnd: isize, msg: u32, text: String) {
-    let text = Box::into_raw(Box::new(text));
-    unsafe {
-        if PostMessageW(hwnd as HWND, msg, 0, text as LPARAM) == 0 {
-            drop(Box::from_raw(text));
-        }
-    }
+    INBOX.lock().unwrap().push((msg, text));
+    unsafe { PostMessageW(hwnd as HWND, msg, 0, 0) };
+}
+
+fn take_texts(msg: u32) -> Vec<String> {
+    let mut inbox = INBOX.lock().unwrap();
+    let (taken, kept): (Vec<_>, Vec<_>) = inbox.drain(..).partition(|(kind, _)| *kind == msg);
+    *inbox = kept;
+    taken.into_iter().map(|(_, text)| text).collect()
 }
 
 fn listen(hwnd: isize) {
@@ -1287,15 +1299,17 @@ unsafe extern "system" fn wndproc(hwnd: HWND, msg: u32, wp: WPARAM, lp: LPARAM) 
             hotkeys(app);
         }
         REMOTE => {
-            let text = Box::from_raw(lp as *mut String);
-            remote(app, &text);
+            for text in take_texts(REMOTE) {
+                remote(app, &text);
+            }
         }
         UPDATE => {
-            let url = Box::from_raw(lp as *mut String);
-            let title = app.tr.t("main.new-version-notification-header");
-            let body = app.tr.t("main.new-version-notification-body").replace("{{link}}", &url);
-            app.balloon_url = Some(*url);
-            balloon(app, &title, &body);
+            if let Some(url) = take_texts(UPDATE).pop() {
+                let title = app.tr.t("main.new-version-notification-header");
+                let body = app.tr.t("main.new-version-notification-body").replace("{{link}}", &url);
+                app.balloon_url = Some(url);
+                balloon(app, &title, &body);
+            }
         }
         WM_TIMER => {
             match wp {
@@ -1322,7 +1336,13 @@ unsafe extern "system" fn wndproc(hwnd: HWND, msg: u32, wp: WPARAM, lp: LPARAM) 
             }
         }
         WM_COPYDATA => {
+            if lp == 0 {
+                return 0;
+            }
             let data = &*(lp as *const COPYDATASTRUCT);
+            if data.lpData.is_null() || data.cbData < 2 || data.lpData as usize % 2 != 0 {
+                return 0;
+            }
             let text = std::slice::from_raw_parts(data.lpData as *const u16, data.cbData as usize / 2);
             let text = String::from_utf16_lossy(text).trim_end_matches('\0').to_string();
             dispatch(app, &text);
