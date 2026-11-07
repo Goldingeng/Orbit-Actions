@@ -100,12 +100,20 @@ fn vk_of(k: &str) -> Option<u16> {
     })
 }
 
-fn expand(s: &str) -> String {
+fn fill(s: &str, clean: impl Fn(&str) -> String) -> String {
     let info = WM_INFO.lock().unwrap().clone();
-    s.replace("{{app_name}}", &info.0)
-        .replace("{{window_name}}", &info.1)
+    s.replace("{{app_name}}", &clean(&info.0))
+        .replace("{{window_name}}", &clean(&info.1))
         .replace("{{pointer_x}}", &info.2.to_string())
         .replace("{{pointer_y}}", &info.3.to_string())
+}
+
+fn expand(s: &str) -> String {
+    fill(s, |value| value.to_string())
+}
+
+fn expand_command(s: &str) -> String {
+    fill(s, |value| value.chars().filter(|c| !c.is_control() && !"&|<>^\"%!()`".contains(*c)).collect())
 }
 
 pub fn open_path(p: &str) {
@@ -122,10 +130,21 @@ fn clipboard(text: &str) {
         }
         EmptyClipboard();
         let h = GlobalAlloc(GMEM_MOVEABLE, data.len() * 2);
+        if h.is_null() {
+            CloseClipboard();
+            return;
+        }
         let p = GlobalLock(h) as *mut u16;
+        if p.is_null() {
+            GlobalFree(h);
+            CloseClipboard();
+            return;
+        }
         std::ptr::copy_nonoverlapping(data.as_ptr(), p, data.len());
         GlobalUnlock(h);
-        SetClipboardData(13, h as HANDLE);
+        if SetClipboardData(13, h as HANDLE).is_null() {
+            GlobalFree(h);
+        }
         CloseClipboard();
     }
 }
@@ -236,7 +255,7 @@ pub fn run(actions: &[Value]) {
             },
             "delay" => sleep(Duration::from_secs_f64(a["duration"].as_f64().unwrap_or(0.0).max(0.0))),
             "execute-command" => {
-                let command = expand(&s("command"));
+                let command = expand_command(&s("command"));
                 let flags = if is_script(&command) { 0x00000010 } else { 0x08000000 };
                 let _ = Command::new("cmd")
                     .arg("/D")

@@ -169,10 +169,11 @@ fn decode(s: &str) -> String {
     let bytes = s.as_bytes();
     let mut out = vec![];
     let mut i = 0;
+    let hex = |b: u8| (b as char).to_digit(16).map(|d| d as u8);
     while i < bytes.len() {
         if bytes[i] == b'%' && i + 2 < bytes.len() {
-            if let Ok(b) = u8::from_str_radix(&s[i + 1..i + 3], 16) {
-                out.push(b);
+            if let (Some(high), Some(low)) = (hex(bytes[i + 1]), hex(bytes[i + 2])) {
+                out.push(high * 16 + low);
                 i += 3;
                 continue;
             }
@@ -502,9 +503,21 @@ fn listen(hwnd: isize) {
         let _ = std::fs::create_dir_all(&dir);
         let _ = std::fs::write(dir.join("ipc-info.json"), format!("{{\n  \"port\": {port},\n  \"apiVersion\": 2\n}}"));
     }
+    static CLIENTS: std::sync::atomic::AtomicUsize = std::sync::atomic::AtomicUsize::new(0);
     std::thread::spawn(move || {
         for stream in listener.incoming().flatten() {
+            if CLIENTS.fetch_add(1, Relaxed) >= 16 {
+                CLIENTS.fetch_sub(1, Relaxed);
+                continue;
+            }
             std::thread::spawn(move || {
+                struct Leave;
+                impl Drop for Leave {
+                    fn drop(&mut self) {
+                        CLIENTS.fetch_sub(1, Relaxed);
+                    }
+                }
+                let _leave = Leave;
                 let from_page = |request: &tungstenite::handshake::server::Request, response| {
                     if request.headers().contains_key("origin") {
                         let mut refusal = tungstenite::handshake::server::ErrorResponse::new(None);
@@ -513,7 +526,10 @@ fn listen(hwnd: isize) {
                     }
                     Ok(response)
                 };
-                let Ok(mut socket) = tungstenite::accept_hdr(stream, from_page) else { return };
+                let mut limits = tungstenite::protocol::WebSocketConfig::default();
+                limits.max_message_size = Some(1 << 20);
+                limits.max_frame_size = Some(1 << 20);
+                let Ok(mut socket) = tungstenite::accept_hdr_with_config(stream, from_page, Some(limits)) else { return };
                 while let Ok(message) = socket.read() {
                     if let tungstenite::Message::Text(text) = message {
                         post_text(hwnd, REMOTE, text.to_string());
@@ -980,6 +996,9 @@ unsafe fn blit_window(app: &mut App, hwnd: HWND, pm: &tiny_skia::Pixmap, x: i32,
         bi.bmiHeader.biBitCount = 32;
         let mut bits = null_mut();
         let bmp = CreateDIBSection(app.dc, &bi, DIB_RGB_COLORS, &mut bits, null_mut(), 0);
+        if bmp.is_null() || bits.is_null() {
+            return;
+        }
         SelectObject(app.dc, bmp);
         if !app.bitmap.is_null() {
             DeleteObject(app.bitmap);

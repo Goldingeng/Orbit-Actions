@@ -115,6 +115,37 @@ fn read_json(path: &PathBuf) -> Value {
     serde_json::from_str(text.trim_start_matches('\u{feff}')).unwrap_or(Value::Null)
 }
 
+fn risky_actions(item: &Value) -> Vec<String> {
+    let name = item["name"].as_str().unwrap_or("");
+    let data = if item["data"].is_object() { &item["data"] } else { item };
+    let legacy = json!({ "type": item["type"].as_str().map(|t| match t {
+        "command" => "execute-command",
+        "file" => "open-file",
+        "hotkey" => "simulate-hotkey",
+        "macro" => "execute-macro",
+        other => other,
+    }), "command": data["command"], "path": data["path"], "hotkey": data["hotkey"] });
+    let workflows = ["selectWorkflow", "hoverWorkflow", "openWorkflow", "activateWorkflow"];
+    let actions = workflows.iter().flat_map(|w| item[*w]["actions"].as_array().into_iter().flatten()).chain(std::iter::once(&legacy));
+    let mut found: Vec<String> = actions
+        .filter_map(|action| {
+            let detail = match action["type"].as_str()? {
+                "execute-command" => action["command"].as_str().unwrap_or("").to_string(),
+                "open-file" => action["path"].as_str().unwrap_or("").to_string(),
+                "send-websocket-message" => action["url"].as_str().unwrap_or("").to_string(),
+                "simulate-hotkey" => action["hotkey"].as_str().unwrap_or("").to_string(),
+                "execute-macro" => "macro".to_string(),
+                _ => return None,
+            };
+            Some(format!("{name}: {detail}"))
+        })
+        .collect();
+    for child in item["children"].as_array().into_iter().flatten() {
+        found.extend(risky_actions(child));
+    }
+    found
+}
+
 fn write_json(path: &PathBuf, value: &Value) {
     if let Ok(text) = serde_json::to_string_pretty(value) {
         let _ = std::fs::write(path, text);
@@ -655,6 +686,22 @@ impl Editor {
         let value = read_json(&file);
         let menu = if value["root"].is_object() { value } else if value["menus"].is_array() { value["menus"][0].clone() } else { Value::Null };
         if menu["root"].is_object() {
+            let risky = risky_actions(&menu["root"]);
+            if !risky.is_empty() {
+                let mut list = risky.iter().take(12).cloned().collect::<Vec<_>>().join("\n");
+                if risky.len() > 12 {
+                    list.push_str(&format!("\n+{}", risky.len() - 12));
+                }
+                let answer = rfd::MessageDialog::new()
+                    .set_level(rfd::MessageLevel::Warning)
+                    .set_title(self.t("settings.import-menu-warning-title"))
+                    .set_description(self.t("settings.import-menu-warning-message").replace("{{actions}}", &list))
+                    .set_buttons(rfd::MessageButtons::YesNo)
+                    .show();
+                if answer != rfd::MessageDialogResult::Yes {
+                    return;
+                }
+            }
             let mut menu = menu;
             menu["shortcut"] = json!("");
             if let Some(list) = self.doc["menus"].as_array_mut() {
