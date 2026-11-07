@@ -1,0 +1,111 @@
+﻿{
+    "date":  "2026-11-07 17:26",
+    "machine":  {
+                    "cpu":  "AMD Ryzen 7 7700 8-Core Processor",
+                    "ramGB":  63,
+                    "os":  "Майкрософт Windows 11 Домашняя 10.0.26200.0"
+                },
+    "runs":  5,
+    "apps":  {
+                 "Orbit Actions":  {
+                                       "diskMB":  15.5,
+                                       "files":  2,
+                                       "startMs":  36,
+                                       "startRunsMs":  [
+                                                           85,
+                                                           36,
+                                                           34,
+                                                           36,
+                                                           34
+                                                       ],
+                                       "menuOpenMs":  31,
+                                       "menuOpenRunsMs":  [
+                                                              25,
+                                                              31,
+                                                              33,
+                                                              22,
+                                                              34
+                                                          ],
+                                       "idle":  {
+                                                    "processes":  1,
+                                                    "workingSetMB":  25.3,
+                                                    "privateMB":  6.3,
+                                                    "threads":  12,
+                                                    "handles":  422
+                                                },
+                                       "idleCpuPercent":  0,
+                                       "menuOpen":  {
+                                                        "processes":  1,
+                                                        "workingSetMB":  27.3,
+                                                        "privateMB":  7.1,
+                                                        "threads":  7,
+                                                        "handles":  414
+                                                    },
+                                       "menuOpenCpuSeconds":  0.08,
+                                       "after20Menus":  {
+                                                            "processes":  1,
+                                                            "workingSetMB":  27.8,
+                                                            "privateMB":  7.7,
+                                                            "threads":  9,
+                                                            "handles":  422
+                                                        },
+                                       "settingsOpen":  {
+                                                            "processes":  2,
+                                                            "workingSetMB":  129.3,
+                                                            "privateMB":  128.7,
+                                                            "threads":  25,
+                                                            "handles":  866
+                                                        }
+                                   },
+                 "Kando 3.0.1":  {
+                                     "diskMB":  405.5,
+                                     "files":  255,
+                                     "startMs":  2297,
+                                     "startRunsMs":  [
+                                                         12268,
+                                                         2795,
+                                                         2250,
+                                                         2277,
+                                                         2297
+                                                     ],
+                                     "menuOpenMs":  94,
+                                     "menuOpenRunsMs":  [
+                                                            168,
+                                                            93,
+                                                            96,
+                                                            94,
+                                                            82
+                                                        ],
+                                     "idle":  {
+                                                  "processes":  4,
+                                                  "workingSetMB":  444.4,
+                                                  "privateMB":  293.8,
+                                                  "threads":  169,
+                                                  "handles":  2535
+                                              },
+                                     "idleCpuPercent":  0.013,
+                                     "menuOpen":  {
+                                                      "processes":  4,
+                                                      "workingSetMB":  444.5,
+                                                      "privateMB":  361.1,
+                                                      "threads":  165,
+                                                      "handles":  2596
+                                                  },
+                                     "menuOpenCpuSeconds":  0.3,
+                                     "after20Menus":  {
+                                                          "processes":  4,
+                                                          "workingSetMB":  462.4,
+                                                          "privateMB":  329.6,
+                                                          "threads":  166,
+                                                          "handles":  2648
+                                                      },
+                                     "settingsOpen":  {
+                                                          "processes":  5,
+                                                          "workingSetMB":  658.6,
+                                                          "privateMB":  485.4,
+                                                          "threads":  200,
+                                                          "handles":  3096
+                                                      }
+                                 }
+             }
+}
