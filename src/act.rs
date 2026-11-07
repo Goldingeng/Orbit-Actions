@@ -116,6 +116,20 @@ fn expand_command(s: &str) -> String {
     fill(s, |value| value.chars().filter(|c| c.is_alphanumeric() || " .,-_:+#@[]/\\".contains(*c)).collect())
 }
 
+fn resolve(action: &Value) -> Value {
+    let mut resolved = action.clone();
+    let text = |key: &str| action[key].as_str().map(str::to_string);
+    if let Some(command) = text("command") {
+        resolved["command"] = Value::from(expand_command(&command));
+    }
+    for key in ["uri", "url", "message"] {
+        if let Some(value) = text(key) {
+            resolved[key] = Value::from(expand(&value));
+        }
+    }
+    resolved
+}
+
 pub fn open_path(p: &str) {
     let op = w("open");
     let p = w(p);
@@ -246,14 +260,8 @@ pub fn risky(action: &Value) -> Option<String> {
     let detail = match kind {
         "execute-command" => s("command"),
         "open-file" => s("path"),
-        "open-uri" => {
-            let uri = s("uri");
-            let scheme = uri.split_once(':').map(|(s, _)| s.to_ascii_lowercase()).unwrap_or_default();
-            if matches!(scheme.as_str(), "http" | "https" | "mailto") {
-                return None;
-            }
-            uri
-        }
+        "open-uri" => s("uri"),
+        "set-clipboard" => s("text"),
         "send-websocket-message" => serde_json::json!([s("url"), s("message")]).to_string(),
         "simulate-hotkey" => s("hotkey"),
         "execute-macro" => action["macro"].to_string(),
@@ -306,7 +314,9 @@ pub fn run(actions: &[Value], ask: Option<&(String, String)>) {
     let main = MAIN.load(std::sync::atomic::Ordering::Relaxed) as HWND;
     let mut inhibited = false;
 
-    for a in actions {
+    for original in actions {
+        let resolved = resolve(original);
+        let a = &resolved;
         if let (Some(ask), Some(detail)) = (ask, risky(a)) {
             if !allowed(main, &detail, ask) {
                 break;
@@ -333,7 +343,7 @@ pub fn run(actions: &[Value], ask: Option<&(String, String)>) {
                 sleep(Duration::from_secs_f64(seconds));
             }
             "execute-command" => {
-                let command = expand_command(&s("command"));
+                let command = s("command");
                 let flags = if is_script(&command) { 0x00000010 } else { 0x08000000 };
                 let _ = Command::new("cmd")
                     .arg("/D")
@@ -344,7 +354,7 @@ pub fn run(actions: &[Value], ask: Option<&(String, String)>) {
                     .spawn();
             }
             "open-file" => open_path(&s("path")),
-            "open-uri" => open_path(&expand(&s("uri"))),
+            "open-uri" => open_path(&s("uri")),
             "open-menu" => {
                 let name = w(&s("menu"));
                 let cd = COPYDATASTRUCT { dwData: 1, cbData: (name.len() * 2) as u32, lpData: name.as_ptr() as _ };
@@ -378,8 +388,8 @@ pub fn run(actions: &[Value], ask: Option<&(String, String)>) {
                 inhibited = true;
             },
             "send-websocket-message" => {
-                let url = expand(&s("url"));
-                let message = expand(&s("message"));
+                let url = s("url");
+                let message = s("message");
                 if let Ok((mut socket, _)) = tungstenite::connect(url.as_str()) {
                     let _ = socket.send(tungstenite::Message::Text(message.into()));
                     let _ = socket.close(None);

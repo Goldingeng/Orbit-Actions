@@ -124,8 +124,9 @@ fn risky_actions(item: &Value) -> Vec<String> {
         "hotkey" => "simulate-hotkey",
         "macro" => "execute-macro",
         "uri" => "open-uri",
+        "text" => "set-clipboard",
         other => other,
-    }), "command": data["command"], "path": data["path"], "hotkey": data["hotkey"], "uri": data["uri"] });
+    }), "command": data["command"], "path": data["path"], "hotkey": data["hotkey"], "uri": data["uri"], "text": data["text"] });
     let workflows = ["selectWorkflow", "hoverWorkflow", "openWorkflow", "activateWorkflow"];
     let actions = workflows.iter().flat_map(|w| item[*w]["actions"].as_array().into_iter().flatten()).chain(std::iter::once(&legacy));
     let mut found: Vec<String> = actions
@@ -135,6 +136,7 @@ fn risky_actions(item: &Value) -> Vec<String> {
                 "open-file" => action["path"].as_str().unwrap_or("").to_string(),
                 "send-websocket-message" => action["url"].as_str().unwrap_or("").to_string(),
                 "simulate-hotkey" => action["hotkey"].as_str().unwrap_or("").to_string(),
+                "set-clipboard" => action["text"].as_str().unwrap_or("").to_string(),
                 "open-uri" => {
                     let uri = action["uri"].as_str().unwrap_or("");
                     let scheme = uri.split_once(':').map(|(s, _)| s.to_ascii_lowercase()).unwrap_or_default();
