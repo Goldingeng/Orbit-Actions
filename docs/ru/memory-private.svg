@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 132" width="760" height="132" role="img" aria-label="Выделенная память (private) в простое: Orbit Actions 6,3 МБ, Kando 3.0.1 294 МБ">
+<style>
+  .surface { fill: #fcfcfb; }
+  .title { fill: #0b0b0b; font: 600 15px 'Segoe UI', system-ui, sans-serif; }
+  .label { fill: #52514e; font: 13px 'Segoe UI', system-ui, sans-serif; }
+  .value { fill: #0b0b0b; font: 600 13px 'Segoe UI', system-ui, sans-serif; }
+  .note { fill: #52514e; font: 12px 'Segoe UI', system-ui, sans-serif; }
+  .base { stroke: #d6d5d0; }
+  .orbit { fill: #2a78d6; }
+  .kando { fill: #eb6834; }
+  @media (prefers-color-scheme: dark) {
+    .surface { fill: #1a1a19; }
+    .title, .value { fill: #f0efec; }
+    .label, .note { fill: #c3c2b7; }
+    .base { stroke: #3a3a37; }
+    .orbit { fill: #3987e5; }
+    .kando { fill: #d95926; }
+  }
+</style>
+<rect class="surface" width="760" height="132" rx="8"/>
+<text class="title" x="20" y="28">Выделенная память (private) в простое</text>
+<text class="label" x="120" y="60" text-anchor="end">Orbit Actions</text>
+  <path class="orbit" d="M130,44 H137.1504424778761 Q141.1504424778761,44 141.1504424778761,48 V62 Q141.1504424778761,66 137.1504424778761,66 H130 Z"><title>Orbit Actions: 6,3 МБ</title></path>
+  <text class="value" x="149.1504424778761" y="60">6,3 МБ</text>
+<text class="label" x="120" y="90" text-anchor="end">Kando</text>
+  <path class="kando" d="M130,74 H646 Q650,74 650,78 V92 Q650,96 646,96 H130 Z"><title>Kando: 294 МБ</title></path>
+  <text class="value" x="658" y="90">294 МБ</text>
+<line class="base" x1="130" y1="40" x2="130" y2="100"/>
+<text class="note" x="20" y="120">Orbit Actions меньше в 47 раз</text>
+</svg>

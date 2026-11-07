@@ -35,18 +35,18 @@ CloseApplications=force
 RestartApplications=no
 
 [Languages]
-Name: "ru"; MessagesFile: "compiler:Languages\Russian.isl"
 Name: "en"; MessagesFile: "compiler:Default.isl"
+Name: "ru"; MessagesFile: "compiler:Languages\Russian.isl"
 
 [CustomMessages]
-ru.Autostart=Запускать вместе с Windows
 en.Autostart=Start with Windows
-ru.Desktop=Ярлык настроек на рабочем столе
+ru.Autostart=Запускать вместе с Windows
 en.Desktop=Settings shortcut on the desktop
-ru.Launch=Запустить Orbit Actions
+ru.Desktop=Ярлык настроек на рабочем столе
 en.Launch=Start Orbit Actions
-ru.Settings=Настройки Orbit Actions
+ru.Launch=Запустить Orbit Actions
 en.Settings=Orbit Actions settings
+ru.Settings=Настройки Orbit Actions
 
 [Tasks]
 Name: "autostart"; Description: "{cm:Autostart}"

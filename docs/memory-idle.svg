@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 132" width="760" height="132" role="img" aria-label="Память в простое: Orbit Actions 25,3 МБ, Kando 3.0.1 444 МБ">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 132" width="760" height="132" role="img" aria-label="Memory at idle: Orbit Actions 25.3 MB, Kando 3.0.1 444 MB">
 <style>
   .surface { fill: #fcfcfb; }
   .title { fill: #0b0b0b; font: 600 15px 'Segoe UI', system-ui, sans-serif; }
@@ -18,13 +18,13 @@
   }
 </style>
 <rect class="surface" width="760" height="132" rx="8"/>
-<text class="title" x="20" y="28">Память в простое</text>
+<text class="title" x="20" y="28">Memory at idle</text>
 <text class="label" x="120" y="60" text-anchor="end">Orbit Actions</text>
-  <path class="orbit" d="M130,44 H155.6039603960396 Q159.6039603960396,44 159.6039603960396,48 V62 Q159.6039603960396,66 155.6039603960396,66 H130 Z"><title>Orbit Actions: 25,3 МБ</title></path>
-  <text class="value" x="167.6039603960396" y="60">25,3 МБ</text>
+  <path class="orbit" d="M130,44 H155.6039603960396 Q159.6039603960396,44 159.6039603960396,48 V62 Q159.6039603960396,66 155.6039603960396,66 H130 Z"><title>Orbit Actions: 25.3 MB</title></path>
+  <text class="value" x="167.6039603960396" y="60">25.3 MB</text>
 <text class="label" x="120" y="90" text-anchor="end">Kando</text>
-  <path class="kando" d="M130,74 H646 Q650,74 650,78 V92 Q650,96 646,96 H130 Z"><title>Kando: 444 МБ</title></path>
-  <text class="value" x="658" y="90">444 МБ</text>
+  <path class="kando" d="M130,74 H646 Q650,74 650,78 V92 Q650,96 646,96 H130 Z"><title>Kando: 444 MB</title></path>
+  <text class="value" x="658" y="90">444 MB</text>
 <line class="base" x1="130" y1="40" x2="130" y2="100"/>
-<text class="note" x="20" y="120">Orbit Actions меньше в 18 раз</text>
+<text class="note" x="20" y="120">Orbit Actions is 18x smaller</text>
 </svg>

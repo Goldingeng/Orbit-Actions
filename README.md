@@ -1,175 +1,177 @@
 # Orbit Actions
 
-Быстрое круговое меню для Windows, написанное на Rust.
+**English** | [Русский](README.ru.md)
 
-Orbit Actions - форк [Kando](https://github.com/kando-menu/kando) Саймона Шнеганса. Это не обёртка, а переписанная заново нативная программа. Модель взаимодействия, пять тем меню и формат конфигурации остались как в Kando, но вместо Electron теперь один небольшой процесс Win32. Проект независимый, проект Kando его не поддерживает и не одобряет.
+A fast radial menu for Windows, written in Rust.
 
-## Скачать
+Orbit Actions is a fork of [Kando](https://github.com/kando-menu/kando) by Simon Schneegans. It is not a wrapper but a native rewrite. The interaction model, the five menu themes and the configuration format are the same as in Kando, but instead of Electron it runs as one small Win32 process. It is an independent project and is not affiliated with or endorsed by the Kando project.
 
-Всё лежит на странице [Releases](https://github.com/Goldingeng/Orbit-Actions/releases/latest). Есть два варианта.
+## Download
 
-**Установщик** - `Orbit-Actions-<версия>-setup.exe`. Подходит большинству. Один файл для всех ПК: он сам определяет, x64 у вас, ARM64 или 32-битная Windows, и ставит нужную сборку. Права администратора не нужны, программа ставится в `%LOCALAPPDATA%\Orbit Actions`. Установщик добавляет ярлык в меню «Пуск», может включить автозапуск вместе с Windows и регистрирует удаление в «Параметры → Приложения». Новую версию можно ставить поверх старой: меню и настройки сохранятся. При удалении они тоже остаются на месте.
+Everything is on the [Releases](https://github.com/Goldingeng/Orbit-Actions/releases/latest) page. There are two options.
 
-**Архив** - для тех, кому установка не нужна, например для флешки:
+**Installer** - `Orbit-Actions-<version>-setup.exe`. The right choice for most people. One file for every PC: it detects whether you run x64, ARM64 or 32-bit Windows and installs the matching build. No administrator rights are needed; the program goes to `%LOCALAPPDATA%\Orbit Actions`. The installer adds a Start menu shortcut, can start Orbit Actions with Windows, and registers an uninstaller under Settings → Apps. A new version can be installed over the old one and keeps your menus and settings. Uninstalling keeps them too.
 
-| Файл | Для чего |
+**Archive** - for when you don't want to install anything, for example on a USB stick:
+
+| File | For |
 |---|---|
-| `Orbit-Actions-<версия>-windows-x64.zip` | Обычные 64-битные ПК с процессорами Intel и AMD |
-| `Orbit-Actions-<версия>-windows-arm64.zip` | Windows на ARM: Snapdragon, Surface Pro X и т. п. |
-| `Orbit-Actions-<версия>-windows-x86.zip` | Старые 32-битные Windows |
+| `Orbit-Actions-<version>-windows-x64.zip` | Regular 64-bit PCs with Intel and AMD processors |
+| `Orbit-Actions-<version>-windows-arm64.zip` | Windows on ARM: Snapdragon, Surface Pro X and similar |
+| `Orbit-Actions-<version>-windows-x86.zip` | Older 32-bit Windows |
 
-Распакуйте архив в любую папку и запустите `orbit-actions.exe`. Все иконки, шрифты, темы, звуки и переводы встроены в exe, а меню и настройки хранятся рядом с ним. Чтобы меню стартовало вместе с Windows, положите ярлык на `orbit-actions.exe` в папку `shell:startup`.
+Unpack the archive into any folder and run `orbit-actions.exe`. All icons, fonts, themes, sounds and translations are built into the exe, and menus and settings are stored next to it. To start the menu with Windows, put a shortcut to `orbit-actions.exe` into the `shell:startup` folder.
 
-Сборок для Linux и macOS нет. Программа написана напрямую на Win32 API, причины объяснены ниже.
+There are no Linux or macOS builds. The program is written directly against the Win32 API; the reasons are explained below.
 
-### Если Windows Defender удалил программу
+### If Windows Defender removed the program
 
-Defender иногда ошибочно определяет `orbit-actions.exe` как `Trojan:Win32/Bearfoos.A!ml`. Пометка `!ml` означает, что это догадка машинного обучения, а не найденный вирус. Её вызывает то, что неподписанная программа ставит глобальный перехват клавиатуры и мыши и добавляется в автозапуск: без этого круговое меню не может открываться по горячей клавише поверх любых окон. Исходный код программы полностью открыт в этом репозитории, а файлы отправлены в Microsoft на проверку как ложное срабатывание.
+Defender sometimes flags `orbit-actions.exe` as `Trojan:Win32/Bearfoos.A!ml` by mistake. The `!ml` suffix means it is a guess by a machine-learning model, not a detected virus. It is triggered because an unsigned program installs a global keyboard and mouse hook and adds itself to startup, which the radial menu needs to open on a hotkey above any window. The full source code is in this repository, and the files have been submitted to Microsoft as a false positive.
 
-Как вернуть программу:
+To get the program back:
 
-1. Откройте «Безопасность Windows» → «Защита от вирусов и угроз» → «Журнал защиты».
-2. Найдите запись `Trojan:Win32/Bearfoos.A!ml` с файлом `orbit-actions.exe`.
-3. Нажмите «Действия» → «Восстановить». Вместе с файлом вернутся ярлык автозапуска и запись в «Приложениях».
-4. Запустите `orbit-actions.exe` или ярлык Orbit Actions в меню «Пуск».
+1. Open Windows Security → Virus & threat protection → Protection history.
+2. Find the `Trojan:Win32/Bearfoos.A!ml` entry for `orbit-actions.exe`.
+3. Click Actions → Restore. The startup shortcut and the entry in Apps come back with the file.
+4. Run `orbit-actions.exe` or the Orbit Actions shortcut in the Start menu.
 
-Если хотите проверить файл сами, сравните его SHA-256 с `SHA256SUMS.txt` из релиза или соберите программу из исходников, см. раздел «Сборка».
+To check the file yourself, compare its SHA-256 with `SHA256SUMS.txt` from the release, or build the program from source, see [Building](#building).
 
-SmartScreen при первом запуске установщика может показать «Windows защитила ваш компьютер», потому что у файла пока нет цифровой подписи. Нажмите «Подробнее» → «Выполнить в любом случае».
+On the first run of the installer, SmartScreen may show "Windows protected your PC" because the file is not digitally signed yet. Click More info → Run anyway.
 
-## Насколько он легче Kando
+## How much lighter than Kando
 
-Оба приложения замерены на одном ПК, с одним и тем же `menus.json` и `config.json`, одним и тем же скриптом.
+Both programs were measured on the same PC, with the same `menus.json` and `config.json`, by the same script.
 
-- ПК: AMD Ryzen 7 7700, 64 ГБ ОЗУ, Windows 11 Home 26200
-- Kando 3.0.1, официальный zip `Kando-win32-x64-3.0.1.zip`
-- Orbit Actions 0.1.0, сборка x64 release
-- Дата: 7 ноября 2026
+- PC: AMD Ryzen 7 7700, 64 GB RAM, Windows 11 Home 26200
+- Kando 3.0.1, the official `Kando-win32-x64-3.0.1.zip`
+- Orbit Actions 0.1.0, x64 release build
+- Date: November 7, 2026
 
-| Показатель | Orbit Actions | Kando 3.0.1 | Разница |
+| Metric | Orbit Actions | Kando 3.0.1 | Difference |
 |---|---|---|---|
-| Память в простое (working set) | 25,3 МБ | 444 МБ | в 18 раз меньше |
-| Выделенная память (private) в простое | 6,3 МБ | 294 МБ | в 47 раз меньше |
-| Память с открытым меню | 27,3 МБ | 445 МБ | в 16 раз меньше |
-| Память после 20 открытий меню | 27,8 МБ | 462 МБ | в 17 раз меньше |
-| Память с открытыми настройками | 129 МБ | 659 МБ | в 5,1 раза меньше |
-| Запуск до готовности | 36 мс | 2 297 мс | в 64 раза быстрее |
-| Открытие меню по команде | 31 мс | 94 мс | в 3 раза быстрее |
-| Размер на диске | 15,5 МБ (2 файла) | 406 МБ (255 файлов) | в 26 раз меньше |
-| Процессы | 1 | 4 | в 4 раза меньше |
-| Потоки в простое | 12 | 169 | в 14 раз меньше |
-| Дескрипторы в простое | 422 | 2 535 | в 6 раз меньше |
-| Загрузка CPU в простое (за 60 с) | 0 % | 0,013 % | Orbit Actions не тратит процессор вообще |
+| Memory at idle (working set) | 25.3 MB | 444 MB | 18x less |
+| Private memory at idle | 6.3 MB | 294 MB | 47x less |
+| Memory with the menu open | 27.3 MB | 445 MB | 16x less |
+| Memory after opening the menu 20 times | 27.8 MB | 462 MB | 17x less |
+| Memory with settings open | 129 MB | 659 MB | 5.1x less |
+| Startup until ready | 36 ms | 2,297 ms | 64x faster |
+| Opening the menu from a command | 31 ms | 94 ms | 3x faster |
+| Size on disk | 15.5 MB (2 files) | 406 MB (255 files) | 26x smaller |
+| Processes | 1 | 4 | 4x fewer |
+| Threads at idle | 12 | 169 | 14x fewer |
+| Handles at idle | 422 | 2,535 | 6x fewer |
+| CPU usage at idle (over 60 s) | 0 % | 0.013 % | Orbit Actions uses no CPU at all |
 
-![Память в простое](docs/memory-idle.svg)
-![Выделенная память в простое](docs/memory-private.svg)
-![Память с открытым меню](docs/memory-menu.svg)
-![Память после 20 открытий меню](docs/memory-after.svg)
-![Память с открытыми настройками](docs/memory-settings.svg)
-![Запуск до готовности](docs/start.svg)
-![Открытие меню по команде](docs/menu-latency.svg)
-![Размер на диске](docs/disk.svg)
-![Процессы](docs/processes.svg)
-![Потоки в простое](docs/threads.svg)
-![Дескрипторы в простое](docs/handles.svg)
+![Memory at idle](docs/memory-idle.svg)
+![Private memory at idle](docs/memory-private.svg)
+![Memory with the menu open](docs/memory-menu.svg)
+![Memory after opening the menu 20 times](docs/memory-after.svg)
+![Memory with settings open](docs/memory-settings.svg)
+![Startup until ready](docs/start.svg)
+![Opening the menu from a command](docs/menu-latency.svg)
+![Size on disk](docs/disk.svg)
+![Processes](docs/processes.svg)
+![Threads at idle](docs/threads.svg)
+![Handles at idle](docs/handles.svg)
 
-### Как считались цифры
+### How the numbers were measured
 
-Всё делает скрипт [`tools/bench.ps1`](tools/bench.ps1). Сырые результаты лежат в [`docs/results.json`](docs/results.json), графики из них рисует [`tools/charts.js`](tools/charts.js).
+Everything is done by [`tools/bench.ps1`](tools/bench.ps1). The raw results are in [`docs/results.json`](docs/results.json), and [`tools/charts.js`](tools/charts.js) draws the charts from them in English and Russian.
 
-- **Память, потоки, дескрипторы** - сумма по всем процессам приложения. У Kando это главный процесс Electron плюс GPU, сетевой и рендер-процессы. Working set - сколько физической памяти занято сейчас, включая общие системные библиотеки. Private - память, которая принадлежит только этому приложению.
-- **Простой** - 20 секунд после запуска. CPU считается по процессорному времени за следующие 60 секунд.
-- **Запуск** - от старта exe до момента, когда приложение открыло свой IPC-порт и принимает подключения. Обе программы пишут этот порт в `%APPDATA%\kando\ipc-info.json`. Берётся медиана из 5 запусков. Первый холодный запуск Kando занял 12,3 с, в медиану он не попал.
-- **Открытие меню** - от вызова `exe --menu "<имя>"` до появления видимого окна меню, медиана из 5 раз. В это время входит запуск второго экземпляра, который передаёт команду уже работающему. По горячей клавише меню открывается без этого шага, поэтому быстрее у обоих.
-- **Настройки** - память через 8 секунд после `--settings`. У Orbit Actions это отдельный `orbit-actions-settings.exe`. Большую часть его памяти занимает OpenGL-драйвер видеокарты. Процесс живёт, только пока открыто окно настроек.
-- **Размер на диске** - у Orbit Actions два exe, у Kando - распакованная папка из zip.
+- **Memory, threads, handles** - the sum over all processes of the program. For Kando that is the main Electron process plus the GPU, network and renderer processes. Working set is the physical memory in use right now, including shared system libraries. Private is the memory that belongs only to this program.
+- **Idle** - 20 seconds after start. CPU is the processor time used over the next 60 seconds.
+- **Startup** - from launching the exe until the program has opened its IPC port and accepts connections. Both programs write this port to `%APPDATA%\kando\ipc-info.json`. The median of 5 runs. Kando's first cold start took 12.3 s and is not part of the median.
+- **Opening the menu** - from calling `exe --menu "<name>"` until the menu window is visible, the median of 5 runs. This includes starting a second instance that passes the command to the running one. A hotkey skips that step, so both programs open faster that way.
+- **Settings** - memory 8 seconds after `--settings`. In Orbit Actions this is a separate `orbit-actions-settings.exe`. Most of its memory is the graphics card's OpenGL driver. The process only lives while the settings window is open.
+- **Size on disk** - for Orbit Actions the two exe files, for Kando the unpacked folder from the zip.
 
-Повторить замеры:
+To repeat the measurements:
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File tools\bench.ps1 -Kando "C:\путь\к\распакованному\Kando"
+powershell -ExecutionPolicy Bypass -File tools\bench.ps1 -Kando "C:\path\to\unpacked\Kando"
 node tools\charts.js
 ```
 
-Скрипт закрывает обе программы, по очереди запускает их и сам открывает меню. Пока он работает (около 6 минут), мышь и клавиатуру лучше не трогать. Конфигурацию Kando скрипт читает из `%APPDATA%\kando`, туда нужно заранее положить те же `menus.json` и `config.json`.
+The script closes both programs, starts them one after the other and opens the menu by itself. Don't touch the mouse and keyboard while it runs (about 6 minutes). The script reads Kando's configuration from `%APPDATA%\kando`, so put the same `menus.json` and `config.json` there first.
 
-## Как это устроено
+## How it works
 
-Два исполняемых файла:
+Two executables:
 
-- `orbit-actions.exe` - само меню. Работает постоянно, занимает около 6 МБ собственной памяти.
-- `orbit-actions-settings.exe` - окно настроек. Запускается только на время редактирования меню.
+- `orbit-actions.exe` - the menu itself. Always running, uses about 6 MB of private memory.
+- `orbit-actions-settings.exe` - the settings window. Runs only while you edit your menus.
 
-Меню - одно невидимое многослойное окно (`WS_EX_LAYERED`) поверх всех остальных. Кадр рисуется программно через [tiny-skia](https://github.com/RazrFalcon/tiny-skia) в обычный буфер и выводится одним вызовом `UpdateLayeredWindow` с попиксельной прозрачностью. Браузерного движка, DOM, CSS и JavaScript нет: геометрия, анимации и пять тем Kando переписаны как код на Rust.
+The menu is one invisible layered window (`WS_EX_LAYERED`) on top of everything else. Each frame is drawn in software by [tiny-skia](https://github.com/RazrFalcon/tiny-skia) into a plain buffer and shown with a single `UpdateLayeredWindow` call with per-pixel transparency. There is no browser engine, DOM, CSS or JavaScript: the geometry, the animations and Kando's five themes are rewritten as Rust code.
 
-Ввод - глобальные хуки мыши и клавиатуры (`WH_MOUSE_LL`, `WH_KEYBOARD_LL`), `RegisterHotKey` для сочетаний клавиш и XInput для геймпада. Если программу запустить второй раз, она находит уже работающий экземпляр, передаёт ему команду через `WM_COPYDATA` и сразу завершается. Для совместимости с внешними скриптами Kando открыт тот же WebSocket-API (`show-menu`, `show-custom-menu`) на локальном порту.
+Input comes from global mouse and keyboard hooks (`WH_MOUSE_LL`, `WH_KEYBOARD_LL`), `RegisterHotKey` for shortcuts and XInput for gamepads. While the menu is open it only takes the keys it uses, such as letters, digits, arrows, Enter and Esc. Shortcuts with Ctrl, Shift, Alt or Win and keys like Print Screen still reach other programs. If the program is started a second time, it finds the running instance, passes the command to it with `WM_COPYDATA` and exits. For compatibility with external Kando scripts, the same WebSocket API (`show-menu`, `show-custom-menu`) is available on a local port.
 
-Окно настроек сделано на [egui](https://github.com/emilk/egui) через OpenGL, с фоном Mica из Windows 11.
+The settings window is built with [egui](https://github.com/emilk/egui) on OpenGL, with a Windows 11 Mica backdrop.
 
-## Что применено для скорости и памяти, и зачем
+## What makes it fast and small, and why
 
-| Приём | Зачем |
+| Technique | Why |
 |---|---|
-| Нативный Win32 вместо Electron | Electron запускает целый Chromium: несколько процессов, сотни мегабайт и секунды на старт. Именно это давало 444 МБ в простое. |
-| Программная отрисовка tiny-skia + `UpdateLayeredWindow` | Для прозрачного круглого меню не нужен ни GPU-контекст, ни композитор браузера. Кадр меню - это несколько сотен килобайт пикселей, процессор рисует его быстрее, чем видеокарта успевает проснуться. |
-| Настройки в отдельном процессе | Интерфейсу настроек нужны OpenGL и egui, это около 120 МБ. Если держать их внутри меню, эта память занята всегда. Отдельный exe отдаёт её системе сразу после закрытия окна. |
-| Таймер кадров только во время анимации | Таймер на 8 мс включается, только пока что-то движется, и выключается, когда меню замерло или закрыто. Поэтому в простое процессор не тратится совсем. |
-| `timeBeginPeriod(1)` только пока меню открыто | Точный системный таймер нужен для плавной анимации, но в простое он мешает процессору засыпать и тратит батарею ноутбука. Включается при открытии меню, выключается при закрытии. |
-| Опрос геймпада только при открытом меню | XInput опрашивается каждые 16 мс, только пока меню на экране. |
-| Шрифты прогреваются в фоне при старте | Шрифты иконок Material Symbols и Simple Icons разбираются в отдельном потоке, чтобы первое открытие меню не ждало их загрузки. |
-| Иконки как глифы шрифта, а не тысячи SVG-файлов | Тысячи иконок Material и Simple Icons хранятся как два TTF-шрифта с таблицей «имя → глиф», а рисуются в точном нужном размере. |
-| Кэши с ограничением размера | Кэш масок иконок сбрасывается после 4 МБ или 256 записей, поэтому память не растёт со временем. После 20 открытий меню она выросла всего на 0,5 МБ. |
-| Один буфер кадра на всё время | DIB-буфер для окна создаётся один раз и только увеличивается при необходимости, а не выделяется заново каждый кадр. |
-| Звуки через `PlaySoundW` из памяти | Короткие WAV проигрываются системным вызовом, без аудиодвижка. |
-| Все ресурсы внутри exe | Переводы, темы, иконки, звуки и шрифты встроены через `include_bytes!`. Нет сотен мелких файлов и чтения диска при старте. |
-| Релизная сборка: LTO, `codegen-units = 1`, `panic = "abort"`, `strip` | Меньше и быстрее exe: компилятор оптимизирует программу целиком, а лишние таблицы и отладочные символы выбрасываются. |
-| SVG вместо PNG | Картинки интерфейса векторные и рендерятся ровно под нужный размер и DPI, а не масштабируют растр. |
+| Native Win32 instead of Electron | Electron starts a whole Chromium: several processes, hundreds of megabytes and seconds to start. That is where Kando's 444 MB at idle comes from. |
+| Software rendering with tiny-skia + `UpdateLayeredWindow` | A transparent round menu needs neither a GPU context nor a browser compositor. A menu frame is a few hundred kilobytes of pixels; the CPU draws it before a graphics card would even wake up. |
+| Settings in a separate process | The settings UI needs OpenGL and egui, about 120 MB. Inside the menu process that memory would be taken all the time. A separate exe gives it back to the system as soon as the window closes. |
+| Frame timer only while animating | The 8 ms timer runs only while something moves, and stops when the menu is still or closed. So no CPU is used at idle. |
+| `timeBeginPeriod(1)` only while the menu is open | A precise system timer is needed for smooth animation, but at idle it keeps the CPU from sleeping and drains laptop batteries. It is turned on when the menu opens and off when it closes. |
+| Gamepad polling only while the menu is open | XInput is polled every 16 ms, only while the menu is on screen. |
+| Fonts warmed up in the background at start | The Material Symbols and Simple Icons fonts are parsed on a separate thread, so the first menu doesn't wait for them. |
+| Icons as font glyphs, not thousands of SVG files | Thousands of Material and Simple Icons are stored as two TTF fonts with a name → glyph table and drawn at exactly the needed size. |
+| Size-limited caches | The icon mask cache is cleared after 4 MB or 256 entries, so memory doesn't grow over time. After opening the menu 20 times it grew by only 0.5 MB. |
+| One frame buffer for the whole lifetime | The window's DIB buffer is created once and only grows when needed instead of being allocated every frame. |
+| Sounds via `PlaySoundW` from memory | Short WAV files are played by a system call, without an audio engine. |
+| All resources inside the exe | Translations, themes, icons, sounds and fonts are embedded with `include_bytes!`. No hundreds of small files and no disk reads at startup. |
+| Release build: LTO, `codegen-units = 1`, `panic = "abort"`, `strip` | A smaller and faster exe: the compiler optimizes the whole program at once and drops unwinding tables and debug symbols. |
+| SVG instead of PNG | Interface images are vector graphics rendered at exactly the needed size and DPI instead of scaled bitmaps. |
 
-## Чего нет и почему
+## What is missing and why
 
-- **Собственные CSS-темы меню.** В Kando меню рисует Chromium, поэтому тема может быть любым HTML и CSS. Чтобы поддержать то же самое, пришлось бы встроить WebView2, а это больше 100 МБ памяти и несколько дополнительных процессов. Тогда пропадает весь смысл форка. Поэтому доступны только пять встроенных тем: Default, Clean Circle, Neon Lights, Purity и Rainbow Labels. Они нарисованы нативно, с пресетами цветов и светлым и тёмным вариантами.
-- **CSS-темы окна настроек.** По той же причине: окно настроек сделано на egui, а не в браузере. Вместо тем у него монохромная палитра на фоне Mica.
-- **Видео во вводном туториале и «сакура»-фоны настроек.** Это оформление самого Kando. Видео пришлось бы декодировать в отдельном медиастеке, а польза от него небольшая. Вместо видео туториал использует SVG-иллюстрации.
-- **Достижения.** Они добавляют статистику и уведомления, но не делают меню удобнее. Это лишний код и фоновая работа.
-- **Linux и macOS.** Меню, ввод, окна, трей и иконки приложений написаны напрямую на Win32 API: так получилось одно лёгкое окно и ноль фоновой нагрузки. На других системах всё это пришлось бы писать заново под X11/Wayland и Cocoa. Для Linux и macOS по-прежнему есть сам Kando.
-- **PNG-ресурсы.** В интерфейсе используются только SVG и WebP: SVG чётко выглядит при любом масштабе, WebP занимает меньше места.
+- **Custom CSS menu themes.** In Kando the menu is drawn by Chromium, so a theme can be any HTML and CSS. Supporting that here would mean embedding WebView2, which costs well over 100 MB of memory and several extra processes. That defeats the point of this fork, so only the five built-in themes are available: Default, Clean Circle, Neon Lights, Purity and Rainbow Labels. They are drawn natively, with color presets and light and dark variants.
+- **CSS themes for the settings window.** Same reason: the settings window is built with egui, not in a browser. Instead of themes it has a monochrome palette on a Mica backdrop.
+- **Videos in the introduction and the sakura backgrounds of the settings window.** These are part of Kando's own look. Videos would need a separate media stack to decode, for little benefit. The introduction uses SVG illustrations instead.
+- **Achievements.** They add statistics and notifications without making the menu more useful. That is extra code and background work.
+- **Linux and macOS.** The menu, input, windows, tray and application icons are written directly against the Win32 API, which is how it gets down to one light window and zero background load. Other systems would need all of that rewritten for X11/Wayland and Cocoa. Kando itself is still there for Linux and macOS.
+- **PNG resources.** The interface uses only SVG and WebP: SVG stays sharp at any scale, and WebP takes less space.
 
-## Возможности
+## Features
 
-Меню (`orbit-actions.exe`):
+Menu (`orbit-actions.exe`):
 
-- Круговая раскладка с фиксированными углами, подменю, расстоянием до родителя и удержанием в пределах монитора
-- Выбор кликом, marking mode, turbo mode, жесты, клавиатура и геймпад (XInput)
-- Пять тем меню с пресетами цветов, светлым и тёмным вариантами, секторами выбора и подсказками клавиш быстрого выбора
-- Звуковые темы с громкостью и высотой звука
-- Иконки: Material Symbols Rounded, Simple Icons (обычные и цветные), встроенные иконки действий, эмодзи, base64-картинки, установленные приложения и папки с иконками пользователя
-- Действия на выбор, открытие, наведение и активацию: закрыть меню, закрыть подменю, задержка, выполнить команду, макрос, переключиться на окно, отключить сочетания клавиш, открыть файл, открыть меню, открыть настройки, открыть ссылку, отправить WebSocket-сообщение, скопировать в буфер, нажать сочетание клавиш
-- Условия показа меню: приложение, заголовок окна, область экрана
-- Кнопка настроек на экране, меню в трее, ссылки `orbit-actions://`, проверка обновлений
-- Необязательный вызов по Alt + левый клик
-- Команды, которые запускают `.bat` и `.cmd`, открываются в своей консоли. Остальные команды выполняются без окна.
+- Radial layout with fixed angles, submenus, parent distance and monitor clamping
+- Click selection, marking mode, turbo mode, gestures, keyboard and gamepad (XInput) input
+- Five menu themes with color presets, light and dark variants, selection wedges and quick-select key hints
+- Sound themes with volume and pitch
+- Icons: Material Symbols Rounded, Simple Icons (plain and colored), built-in action icons, emoji, base64 images, installed applications and user icon folders
+- Actions on select, open, hover and activate: close menu, close submenu, delay, execute command, execute macro, focus window, inhibit shortcuts, open file, open menu, open settings, open URI, send WebSocket message, set clipboard, simulate hotkey
+- Menu conditions by application, window title and screen area
+- On-screen settings button, tray menu, `orbit-actions://` links, update check
+- Optional Alt + left click trigger
+- Commands that run `.bat` and `.cmd` files open in their own console. Other commands run without a window.
 
-Настройки (`orbit-actions-settings.exe`):
+Settings (`orbit-actions-settings.exe`):
 
-- Список меню с коллекциями, поиском, импортом и экспортом
-- Интерактивный предпросмотр меню с перетаскиванием, фиксацией углов и шаблонами пунктов
-- Редакторы пунктов, меню и действий с записью сочетаний клавиш и макросов, выбором приложения и окна
-- Общие настройки, настройки темы, вводный туториал, отмена и повтор
-- Переводы на 30 языков
+- Menu list with collections, search, import and export
+- Interactive menu preview with drag and drop, angle locks and item templates
+- Item, menu and workflow editors with hotkey and macro recording, application and window pickers
+- General settings, menu theme settings, introduction, undo and redo
+- Translations for 30 languages
 
-## Конфигурация
+## Configuration
 
-Меню и настройки хранятся в `menus.json` и `config.json` рядом с программой. Формат совместим с Kando 3, так что существующую конфигурацию Kando можно просто скопировать. При первом запуске Orbit Actions сам подхватывает `%APPDATA%\kando\menus.json`, если такой файл есть.
+Menus and settings are stored in `menus.json` and `config.json` next to the program. The format is compatible with Kando 3, so an existing Kando configuration can be copied over as is. On the first start Orbit Actions also picks up `%APPDATA%\kando\menus.json` if it exists.
 
-## Сборка
+## Building
 
-Нужен Rust (stable) и Visual Studio Build Tools с компонентом C++.
+You need Rust (stable) and Visual Studio Build Tools with the C++ workload.
 
 ```
 cargo build --release
 ```
 
-Другие архитектуры:
+Other architectures:
 
 ```
 rustup target add i686-pc-windows-msvc aarch64-pc-windows-msvc
@@ -177,18 +179,18 @@ cargo build --release --target i686-pc-windows-msvc
 cargo build --release --target aarch64-pc-windows-msvc
 ```
 
-Для ARM64 в Visual Studio Installer нужен компонент «MSVC ARM64 build tools».
+For ARM64, add the "MSVC ARM64 build tools" component in the Visual Studio Installer.
 
-Установщик собирается [Inno Setup 6](https://jrsoftware.org/isinfo.php) из `installer/orbit-actions.iss`, после того как готовы все три сборки:
+The installer is built with [Inno Setup 6](https://jrsoftware.org/isinfo.php) from `installer/orbit-actions.iss` once all three builds are done:
 
 ```
 iscc installer\orbit-actions.iss
 ```
 
-Готовый `Orbit-Actions-<версия>-setup.exe` появится в `target\installer`.
+The finished `Orbit-Actions-<version>-setup.exe` appears in `target\installer`.
 
-Шрифты `assets/material.ttf` и `assets/simple.ttf` и таблицы иконок генерирует `tools/icons.py`, ему нужны `fonttools` и `brotli`.
+`assets/material.ttf`, `assets/simple.ttf` and the icon tables are generated by `tools/icons.py` (needs `fonttools` and `brotli`).
 
-## Лицензия
+## License
 
-Orbit Actions распространяется по лицензии MIT, см. [LICENSE](LICENSE). Он основан на Kando, который тоже под MIT. Сторонние ресурсы сохраняют свои лицензии, см. [THIRD_PARTY.md](THIRD_PARTY.md).
+Orbit Actions is released under the MIT License, see [LICENSE](LICENSE). It is based on Kando, which is MIT licensed as well. Third-party assets keep their own licenses, see [THIRD_PARTY.md](THIRD_PARTY.md).
