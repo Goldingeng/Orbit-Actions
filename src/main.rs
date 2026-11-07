@@ -496,8 +496,13 @@ fn version_numbers(v: &str) -> Vec<u32> {
 static INBOX: std::sync::Mutex<Vec<(u32, String)>> = std::sync::Mutex::new(Vec::new());
 
 fn post_text(hwnd: isize, msg: u32, text: String) {
-    INBOX.lock().unwrap().push((msg, text));
-    unsafe { PostMessageW(hwnd as HWND, msg, 0, 0) };
+    let mut inbox = INBOX.lock().unwrap();
+    if inbox.len() >= 256 {
+        return;
+    }
+    if unsafe { PostMessageW(hwnd as HWND, msg, 0, 0) } != 0 {
+        inbox.push((msg, text));
+    }
 }
 
 fn take_texts(msg: u32) -> Vec<String> {
