@@ -19,9 +19,27 @@
   <b>English</b> | <a href="README.ru.md">Русский</a>
 </p>
 
+<p align="center">
+  <a href="https://github.com/Goldingeng/Orbit-Actions/releases/latest"><img src="https://img.shields.io/github/v/release/Goldingeng/Orbit-Actions?label=release" alt="Latest release"></a>
+  <a href="https://github.com/Goldingeng/Orbit-Actions/releases"><img src="https://img.shields.io/github/downloads/Goldingeng/Orbit-Actions/total" alt="Downloads"></a>
+  <img src="https://img.shields.io/badge/platform-Windows%2010%20%7C%2011-0078D4" alt="Windows 10 and 11">
+  <img src="https://img.shields.io/badge/made%20with-Rust-orange" alt="Rust">
+  <a href="LICENSE"><img src="https://img.shields.io/github/license/Goldingeng/Orbit-Actions" alt="MIT license"></a>
+</p>
+
+<p align="center">
+  <img src="assets/previews/default.webp" width="150" alt="Default theme">
+  <img src="assets/previews/clean-circle.webp" width="150" alt="Clean Circle theme">
+  <img src="assets/previews/neon-lights.webp" width="150" alt="Neon Lights theme">
+  <img src="assets/previews/purity.webp" width="150" alt="Purity theme">
+  <img src="assets/previews/rainbow-labels.webp" width="150" alt="Rainbow Labels theme">
+</p>
+
 ---
 
-Orbit Actions is a fork of [Kando](https://github.com/kando-menu/kando) by Simon Schneegans. It is not a wrapper but a native rewrite. The interaction model, the five menu themes and the configuration format are the same as in Kando, but instead of Electron it runs as one small Win32 process. It is an independent project and is not affiliated with or endorsed by the Kando project.
+Orbit Actions is a radial menu (pie menu) launcher for Windows 10 and 11: open apps, websites, files and folders, press hotkeys, type macros and run scripts with one click or mouse gesture.
+
+It is a fork of [Kando](https://github.com/kando-menu/kando) by Simon Schneegans. It is not a wrapper but a native rewrite. The interaction model, the five menu themes and the configuration format are the same as in Kando, but instead of Electron it runs as one small Win32 process. It is an independent project and is not affiliated with or endorsed by the Kando project.
 
 ## Download
 
@@ -41,20 +59,11 @@ Unpack the archive into any folder and run `orbit-actions.exe`. All icons, fonts
 
 There are no Linux or macOS builds. The program is written directly against the Win32 API; the reasons are explained below.
 
-### If Windows Defender removed the program
-
-Defender sometimes flags `orbit-actions.exe` as `Trojan:Win32/Bearfoos.A!ml` by mistake. The `!ml` suffix means it is a guess by a machine-learning model, not a detected virus. It is triggered because an unsigned program installs a global keyboard and mouse hook and adds itself to startup, which the radial menu needs to open on a hotkey above any window. The full source code is in this repository, and the files have been submitted to Microsoft as a false positive.
-
-To get the program back:
-
-1. Open Windows Security → Virus & threat protection → Protection history.
-2. Find the `Trojan:Win32/Bearfoos.A!ml` entry for `orbit-actions.exe`.
-3. Click Actions → Restore. The startup shortcut and the entry in Apps come back with the file.
-4. Run `orbit-actions.exe` or the Orbit Actions shortcut in the Start menu.
-
-To check the file yourself, compare its SHA-256 with `SHA256SUMS.txt` from the release, or build the program from source, see [Building](#building).
+### First launch
 
 On the first run of the installer, SmartScreen may show "Windows protected your PC" because the file is not digitally signed yet. Click More info → Run anyway.
+
+To check the file yourself, compare its SHA-256 with `SHA256SUMS.txt` from the release, or build the program from source, see [Building](#building).
 
 ## How much lighter than Kando
 

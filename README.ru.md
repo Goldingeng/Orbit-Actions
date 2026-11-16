@@ -19,9 +19,27 @@
   <a href="README.md">English</a> | <b>Русский</b>
 </p>
 
+<p align="center">
+  <a href="https://github.com/Goldingeng/Orbit-Actions/releases/latest"><img src="https://img.shields.io/github/v/release/Goldingeng/Orbit-Actions?label=release" alt="Latest release"></a>
+  <a href="https://github.com/Goldingeng/Orbit-Actions/releases"><img src="https://img.shields.io/github/downloads/Goldingeng/Orbit-Actions/total" alt="Downloads"></a>
+  <img src="https://img.shields.io/badge/platform-Windows%2010%20%7C%2011-0078D4" alt="Windows 10 and 11">
+  <img src="https://img.shields.io/badge/made%20with-Rust-orange" alt="Rust">
+  <a href="LICENSE"><img src="https://img.shields.io/github/license/Goldingeng/Orbit-Actions" alt="MIT license"></a>
+</p>
+
+<p align="center">
+  <img src="assets/previews/default.webp" width="150" alt="Тема Default">
+  <img src="assets/previews/clean-circle.webp" width="150" alt="Clean Circle theme">
+  <img src="assets/previews/neon-lights.webp" width="150" alt="Neon Lights theme">
+  <img src="assets/previews/purity.webp" width="150" alt="Purity theme">
+  <img src="assets/previews/rainbow-labels.webp" width="150" alt="Rainbow Labels theme">
+</p>
+
 ---
 
-Orbit Actions - форк [Kando](https://github.com/kando-menu/kando) Саймона Шнеганса. Это не обёртка, а переписанная заново нативная программа. Модель взаимодействия, пять тем меню и формат конфигурации остались как в Kando, но вместо Electron теперь один небольшой процесс Win32. Проект независимый, проект Kando его не поддерживает и не одобряет.
+Orbit Actions - круговое меню (pie menu) для Windows 10 и 11: запуск программ, сайтов, файлов и папок, горячие клавиши, макросы и скрипты одним кликом или жестом мыши.
+
+Это форк [Kando](https://github.com/kando-menu/kando) Саймона Шнеганса. Это не обёртка, а переписанная заново нативная программа. Модель взаимодействия, пять тем меню и формат конфигурации остались как в Kando, но вместо Electron теперь один небольшой процесс Win32. Проект независимый, проект Kando его не поддерживает и не одобряет.
 
 ## Скачать
 
@@ -41,20 +59,11 @@ Orbit Actions - форк [Kando](https://github.com/kando-menu/kando) Саймо
 
 Сборок для Linux и macOS нет. Программа написана напрямую на Win32 API, причины объяснены ниже.
 
-### Если Windows Defender удалил программу
-
-Defender иногда ошибочно определяет `orbit-actions.exe` как `Trojan:Win32/Bearfoos.A!ml`. Пометка `!ml` означает, что это догадка машинного обучения, а не найденный вирус. Её вызывает то, что неподписанная программа ставит глобальный перехват клавиатуры и мыши и добавляется в автозапуск: без этого круговое меню не может открываться по горячей клавише поверх любых окон. Исходный код программы полностью открыт в этом репозитории, а файлы отправлены в Microsoft на проверку как ложное срабатывание.
-
-Как вернуть программу:
-
-1. Откройте «Безопасность Windows» → «Защита от вирусов и угроз» → «Журнал защиты».
-2. Найдите запись `Trojan:Win32/Bearfoos.A!ml` с файлом `orbit-actions.exe`.
-3. Нажмите «Действия» → «Восстановить». Вместе с файлом вернутся ярлык автозапуска и запись в «Приложениях».
-4. Запустите `orbit-actions.exe` или ярлык Orbit Actions в меню «Пуск».
-
-Если хотите проверить файл сами, сравните его SHA-256 с `SHA256SUMS.txt` из релиза или соберите программу из исходников, см. раздел «Сборка».
+### Первый запуск
 
 SmartScreen при первом запуске установщика может показать «Windows защитила ваш компьютер», потому что у файла пока нет цифровой подписи. Нажмите «Подробнее» → «Выполнить в любом случае».
+
+Если хотите проверить файл сами, сравните его SHA-256 с `SHA256SUMS.txt` из релиза или соберите программу из исходников, см. раздел «Сборка».
 
 ## Насколько он легче Kando
 
