@@ -57,6 +57,13 @@ Everything is on the [Releases](https://github.com/Goldingeng/Orbit-Actions/rele
 
 Unpack the archive into any folder and run `orbit-actions.exe`. All icons, fonts, themes, sounds and translations are built into the exe, and menus and settings are stored next to it. To start the menu with Windows, put a shortcut to `orbit-actions.exe` into the `shell:startup` folder.
 
+**Scoop** - if you use [Scoop](https://scoop.sh):
+
+```powershell
+scoop bucket add orbit-actions https://github.com/Goldingeng/scoop-bucket
+scoop install orbit-actions
+```
+
 There are no Linux or macOS builds. The program is written directly against the Win32 API; the reasons are explained below.
 
 ### First launch

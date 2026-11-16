@@ -57,6 +57,13 @@ Orbit Actions - круговое меню (pie menu) для Windows 10 и 11: з
 
 Распакуйте архив в любую папку и запустите `orbit-actions.exe`. Все иконки, шрифты, темы, звуки и переводы встроены в exe, а меню и настройки хранятся рядом с ним. Чтобы меню стартовало вместе с Windows, положите ярлык на `orbit-actions.exe` в папку `shell:startup`.
 
+**Scoop** - если вы пользуетесь [Scoop](https://scoop.sh):
+
+```powershell
+scoop bucket add orbit-actions https://github.com/Goldingeng/scoop-bucket
+scoop install orbit-actions
+```
+
 Сборок для Linux и macOS нет. Программа написана напрямую на Win32 API, причины объяснены ниже.
 
 ### Первый запуск
